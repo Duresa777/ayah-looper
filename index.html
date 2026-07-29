@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Quran Recitation Looper</title>
+    <style>
+        /* Define native app colors */
+        :root {
+            --primary: #007aff;      /* iOS Blue */
+            --success: #34c759;      /* iOS Green */
+            --warning: #ff9500;      /* iOS Orange */
+            --danger: #ff3b30;       /* iOS Red */
+            --bg-color: #f2f2f7;     /* App background */
+            --card-bg: #ffffff;
+            --text-main: #1c1c1e;
+            --text-muted: #8e8e93;
+        }
+
+        /* 1. Lock the Viewport */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            display: flex; 
+            justify-content: center;
+            height: 100vh; 
+            overflow: hidden; /* Prevents pull-to-refresh and bouncing */
+            -webkit-tap-highlight-color: transparent; /* Removes blue tap boxes on mobile */
+        }
+
+        /* 2. The App Screen Container */
+        .app-container {
+            width: 100%;
+            max-width: 430px; /* Max width of an iPhone Pro Max */
+            background: var(--bg-color);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+
+        /* Fixed Top Header */
+        .app-header {
+            background: var(--card-bg);
+            padding: 16px;
+            text-align: center;
+            border-bottom: 1px solid #e5e5ea;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-main);
+            z-index: 10;
+        }
+
+        /* Scrollable Content Area */
+        .content-area {
+            flex: 1;
+            overflow-y: auto; /* Only this area scrolls */
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        /* Clean Video Player */
+        video { 
+            width: 100%; 
+            border-radius: 12px; 
+            background: #000; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08); 
+        }
+        
+        /* App Cards for Settings/Controls */
+        .card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+
+        /* 3. Button UI & Touch Targets */
+        .btn-group { 
+            display: flex; 
+            gap: 12px; 
+            justify-content: center; 
+        }
+        
+        button {
+            flex: 1;
+            padding: 14px 16px;
+            border-radius: 14px;
+            border: none;
+            font-size: 15px;
+            font-weight: 600;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.1s ease;
+        }
+        button:active { transform: scale(0.96); } /* Mimic physical tap */
+        button:disabled { opacity: 0.4; cursor: not-allowed; }
+        
+        #markCutBtn { background: var(--success); }
+        #toggleLoopBtn { background: var(--warning); color: #fff; }
+        #prevBtn, #nextBtn { background: var(--primary); }
+
+        /* Hide Default Browser File Picker, Replace with App Button */
+        .upload-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+        }
+        .upload-btn {
+            width: 100%;
+            background: #e5e5ea;
+            color: var(--text-main);
+            border: 2px dashed #c7c7cc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+            border-radius: 12px;
+            font-weight: 500;
+        }
+        .upload-wrapper input[type=file] {
+            font-size: 100px;
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            cursor: pointer;
+            height: 100%;
+        }
+
+        /* Settings Layout */
+        .settings {
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            font-size: 15px; 
+            font-weight: 500; 
+            color: var(--text-main);
+        }
+        input[type="number"] {
+            width: 60px; 
+            padding: 8px; 
+            border: 1px solid #c7c7cc; 
+            border-radius: 8px;
+            text-align: center; 
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .status { 
+            font-size: 14px; 
+            color: var(--text-muted); 
+            text-align: center; 
+            font-weight: 500; 
+            margin-top: 8px;
+        }
+
+        /* List Styling overrides for app.js inline styles */
+        ul { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+        li {
+            background: var(--card-bg); 
+            padding: 12px 16px !important; 
+            border-radius: 12px;
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05); 
+            font-size: 15px; 
+            font-weight: 500;
+            border-bottom: none !important;
+        }
+        li button { 
+            flex: none; 
+            background: #ffe5e5 !important; 
+            color: var(--danger) !important; 
+            padding: 8px 12px !important; 
+            border-radius: 8px !important; 
+            font-size: 13px !important; 
+            width: auto;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <!-- Sticky App Header -->
+        <div class="app-header">
+            Ayah Looper
+        </div>
+
+        <!-- Scrollable Content -->
+        <div class="content-area">
+            
+            <!-- Custom File Upload Button -->
+            <div class="upload-wrapper">
+                <div class="upload-btn">📁 Tap to Upload Video</div>
+                <input type="file" id="videoUpload" accept="video/mp4,video/*">
+            </div>
+            
+            <video id="quranVideo" controls playsinline></video>
+            
+            <div class="status" id="statusText">Video loaded. Tap play and cut pieces.</div>
+
+            <!-- Slicer Tools Card -->
+            <div class="card">
+                <div class="btn-group">
+                    <button id="markCutBtn">✂️ Cut Ayah</button>
+                    <button id="toggleLoopBtn">▶️ Loop</button>
+                </div>
+                
+                <div class="settings" style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #f2f2f7;">
+                    <label for="pauseInput">Pause duration:</label>
+                    <div>
+                        <input type="number" id="pauseInput" value="3" min="0" max="15">
+                        <span style="color: var(--text-muted); font-size: 13px;">sec</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation Card -->
+            <div class="card btn-group">
+                <button id="prevBtn" disabled>⏮ Previous</button>
+                <button id="nextBtn" disabled>Next ⏭</button>
+            </div>
+
+            <!-- Slice List -->
+            <ul id="sliceList"></ul>
+
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
