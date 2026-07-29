@@ -6,64 +6,113 @@ const statusText = document.getElementById('statusText');
 const markCutBtn = document.getElementById('markCutBtn');
 const toggleLoopBtn = document.getElementById('toggleLoopBtn');
 const sliceList = document.getElementById('sliceList');
-const pauseInput = document.getElementById('pauseInput');
-
-// NEW: Grab the timer overlay and custom timeline
-const timeOverlay = document.getElementById('timeOverlay');
-const customTimeline = document.getElementById('customTimeline');
 
 let slices = [];
 let currentSliceIndex = 0;
 let lastCutTime = 0.0;
 let isLooping = false; 
-let currentFileName = ""; 
-let loopTimeout = null; 
 
-function saveCuts() {
-    if (currentFileName) {
-        localStorage.setItem('ayahCuts_' + currentFileName, JSON.stringify(slices));
+// --- Helper: Save and Load from Phone Memory ---
+function saveCutsToPhone() {
+    localStorage.setItem('savedQuranCuts', JSON.stringify(slices));
+}
+
+function loadCutsFromPhone() {
+    const savedData = localStorage.getItem('savedQuranCuts');
+    if (savedData) {
+        slices = JSON.parse(savedData);
+        
+        renderSlices(); // Draw the list with delete buttons
+
+        if (slices.length > 0) {
+            lastCutTime = slices[slices.length - 1].end;
+        }
+        
+        statusText.innerHTML = `Loaded ${slices.length} saved cuts! Press play on the video.`;
+    } else {
+        statusText.innerHTML = "Video loaded! Press play on the video screen, then click 'Cut Ayah Here'.";
     }
 }
 
-// --- 1. Load Local Video File & Restore Cuts ---
+// --- NEW / RESTORED: The Render Function with Delete Button ---
+function renderSlices() {
+    sliceList.innerHTML = ""; // Clear the current visual list
+    
+    slices.forEach((slice, index) => {
+        // Fix the IDs just in case a middle piece was deleted
+        slice.id = index + 1; 
+        
+        const listItem = document.createElement('li');
+        listItem.style.display = "flex";
+        listItem.style.justifyContent = "space-between";
+        listItem.style.alignItems = "center";
+        
+        const textSpan = document.createElement('span');
+        textSpan.textContent = `Ayah ${slice.id}: ${slice.start.toFixed(1)}s to ${slice.end.toFixed(1)}s`;
+        
+        // Create the Delete Button
+        const deleteBtn = document.createElement('button');
+        deleteBtn.textContent = "❌ Delete";
+        deleteBtn.style.background = "#ef4444"; // Red color
+        deleteBtn.style.padding = "6px 12px";
+        deleteBtn.style.fontSize = "12px";
+        deleteBtn.style.minWidth = "auto"; // Prevents the button from stretching
+        deleteBtn.style.flex = "none";
+        
+        // What happens when they click Delete
+        deleteBtn.addEventListener('click', () => {
+            // 1. Remove from array
+            slices.splice(index, 1);
+            
+            // 2. Fix the last cut time
+            if (slices.length > 0) {
+                lastCutTime = slices[slices.length - 1].end;
+            } else {
+                lastCutTime = 0.0;
+            }
+            
+            // 3. Save the updated (smaller) array to the phone's memory!
+            saveCutsToPhone();
+            
+            // 4. Stop looping if they delete while practicing
+            if (isLooping) {
+                isLooping = false;
+                video.pause();
+                toggleLoopBtn.textContent = "▶️ Start Looping";
+                toggleLoopBtn.style.background = "#ea580c";
+                prevBtn.disabled = true;
+                nextBtn.disabled = true;
+                statusText.textContent = "Looping stopped because a cut was deleted.";
+            }
+            
+            // 5. Redraw the list
+            renderSlices();
+        });
+        
+        listItem.appendChild(textSpan);
+        listItem.appendChild(deleteBtn);
+        sliceList.appendChild(listItem);
+    });
+}
+
+// --- 1. Load Local Video File ---
 videoUpload.addEventListener('change', function() {
     const file = this.files[0];
     if (file) {
-        currentFileName = file.name; 
         video.src = URL.createObjectURL(file);
         
-        // Wait for video metadata to load so we know the duration for the red dots
-        video.onloadedmetadata = () => {
-            const savedData = localStorage.getItem('ayahCuts_' + currentFileName);
-            
-            if (savedData) {
-                slices = JSON.parse(savedData);
-                if (slices.length > 0) {
-                    lastCutTime = slices[slices.length - 1].end;
-                } else {
-                    lastCutTime = 0.0;
-                }
-                statusText.innerHTML = "Saved cuts loaded! Press Play to continue.";
-            } else {
-                slices = [];
-                lastCutTime = 0.0;
-                statusText.innerHTML = "New video loaded! Press Play, then click 'Cut Ayah Here'.";
-            }
-            
-            isLooping = false;
-            clearTimeout(loopTimeout); 
-            timeOverlay.style.display = "block"; // Show timer
-            renderSlices(); 
-            
-            toggleLoopBtn.textContent = "▶️ Start Looping";
-            toggleLoopBtn.style.background = "#ea580c";
-        };
+        isLooping = false;
+        toggleLoopBtn.textContent = "▶️ Start Looping";
+        toggleLoopBtn.style.background = "#ea580c";
+        
+        loadCutsFromPhone();
     }
 });
 
-// --- 2. The Slicing Tool ---
+// --- 2. The Slicing Tool with Visual Feedback ---
 markCutBtn.addEventListener('click', () => {
     const cutTime = video.currentTime;
+    
     if (cutTime <= lastCutTime) return;
 
     const newSlice = {
@@ -75,73 +124,22 @@ markCutBtn.addEventListener('click', () => {
     slices.push(newSlice); 
     lastCutTime = cutTime; 
     
-    saveCuts(); 
-    renderSlices(); 
+    saveCutsToPhone(); 
+    renderSlices(); // Draw the new cut with a delete button
+
+    const originalText = markCutBtn.textContent;
+    markCutBtn.textContent = "✅ Saved!";
+    markCutBtn.style.background = "#059669"; 
+    
+    if (navigator.vibrate) navigator.vibrate(50);
+
+    setTimeout(() => {
+        markCutBtn.textContent = originalText;
+        markCutBtn.style.background = "#16a34a"; 
+    }, 600); 
 });
 
-// --- 3. The Render Function (Now includes Red Dots) ---
-function renderSlices() {
-    sliceList.innerHTML = ""; 
-    customTimeline.innerHTML = ""; // Clear old red dots
-    
-    slices.forEach((slice, index) => {
-        slice.id = index + 1; 
-        
-        // ---------------------------------------------------
-        // NEW: Calculate and place the Red Dot on the timeline
-        // ---------------------------------------------------
-        if (video.duration) {
-            const dot = document.createElement('div');
-            dot.className = 'cut-dot';
-            
-            // Calculate where the dot should go (e.g., 50% across the bar)
-            const percentage = (slice.end / video.duration) * 100;
-            dot.style.left = percentage + "%";
-            
-            customTimeline.appendChild(dot);
-        }
-
-        // Build the list item as usual
-        const listItem = document.createElement('li');
-        
-        const textSpan = document.createElement('span');
-        textSpan.textContent = `Ayah ${slice.id}: ${slice.start.toFixed(1)}s to ${slice.end.toFixed(1)}s`;
-        
-        const deleteBtn = document.createElement('button');
-        deleteBtn.textContent = "❌ Delete";
-        
-        deleteBtn.addEventListener('click', () => {
-            slices.splice(index, 1);
-            
-            if (slices.length > 0) {
-                lastCutTime = slices[slices.length - 1].end;
-            } else {
-                lastCutTime = 0.0;
-            }
-            
-            if (isLooping) {
-                isLooping = false;
-                video.pause();
-                clearTimeout(loopTimeout); 
-                toggleLoopBtn.textContent = "▶️ Start Looping";
-                toggleLoopBtn.style.background = "#ea580c";
-                prevBtn.disabled = true;
-                nextBtn.disabled = true;
-                statusText.textContent = "Looping stopped because a cut was deleted.";
-                timeOverlay.style.display = "block"; // Show timer again
-            }
-            
-            saveCuts(); 
-            renderSlices();
-        });
-        
-        listItem.appendChild(textSpan);
-        listItem.appendChild(deleteBtn);
-        sliceList.appendChild(listItem);
-    });
-}
-
-// --- 4. Toggle Looping Mode ---
+// --- 3. Toggle Looping Mode ---
 toggleLoopBtn.addEventListener('click', () => {
     if (slices.length === 0) {
         alert("Please make at least one cut first!");
@@ -153,7 +151,6 @@ toggleLoopBtn.addEventListener('click', () => {
     if (isLooping) {
         toggleLoopBtn.textContent = "⏹️ Stop Looping";
         toggleLoopBtn.style.background = "#dc2626";
-        timeOverlay.style.display = "none"; // Hide the timer when looping starts
         currentSliceIndex = 0; 
         video.currentTime = slices[currentSliceIndex].start;
         video.play();
@@ -161,68 +158,36 @@ toggleLoopBtn.addEventListener('click', () => {
     } else {
         toggleLoopBtn.textContent = "▶️ Start Looping";
         toggleLoopBtn.style.background = "#ea580c";
-        timeOverlay.style.display = "block"; // Show the timer again when slicing
         statusText.textContent = "Looping stopped. You can make more cuts.";
         prevBtn.disabled = true;
         nextBtn.disabled = true;
-        
-        video.pause();
-        clearTimeout(loopTimeout); 
     }
 });
 
-// --- 5. The Core Engine (Now includes Live Timer updates) ---
+// --- 4. The Core Looping Engine ---
 video.addEventListener('timeupdate', () => {
-    if (!video.src) return; 
-
-    // NEW: Update the Live Timer if we are in Slicing Mode
-    if (!isLooping) {
-        timeOverlay.textContent = video.currentTime.toFixed(1) + "s";
-    }
-
-    if (!isLooping || slices.length === 0) return; 
+    if (!video.src || !isLooping || slices.length === 0) return; 
 
     const currentSlice = slices[currentSliceIndex];
-    
     if (video.currentTime >= currentSlice.end) {
-        video.pause(); 
-        video.currentTime = currentSlice.start; 
-        
-        const pauseSeconds = parseInt(pauseInput.value) || 0; 
-        const pauseMilliseconds = pauseSeconds * 1000; 
-
-        if (pauseSeconds > 0) {
-            statusText.textContent = `⏸️ Your turn! (Pausing for ${pauseSeconds} seconds...)`;
-        } else {
-            statusText.textContent = `Looping Ayah ${currentSlice.id}...`;
-        }
-        
-        loopTimeout = setTimeout(() => {
-            if (isLooping) { 
-                video.play();
-                updateUI(); 
-            }
-        }, pauseMilliseconds); 
+        video.currentTime = currentSlice.start;
+        video.play(); 
     }
 });
 
-// --- 6. Navigation Controls ---
+// --- 5. Navigation Controls ---
 nextBtn.addEventListener('click', () => {
     if (currentSliceIndex < slices.length - 1 && isLooping) {
-        clearTimeout(loopTimeout); 
         currentSliceIndex++;
         video.currentTime = slices[currentSliceIndex].start;
-        video.play(); 
         updateUI();
     }
 });
 
 prevBtn.addEventListener('click', () => {
     if (currentSliceIndex > 0 && isLooping) {
-        clearTimeout(loopTimeout); 
         currentSliceIndex--;
         video.currentTime = slices[currentSliceIndex].start;
-        video.play(); 
         updateUI();
     }
 });
