@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ayah Looper</title>
-    <link rel="icon" type="image/jpeg" href="favicon.png">
+    <link rel="icon" type="image/png" href="favicon.png">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     
@@ -282,15 +282,78 @@
             ul::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 10px; }
         }
 
+        /* --- MEDIA QUERY: YouTube-Style Ultra-Compact Mobile App Layout --- */
         @media (max-width: 480px) {
-            .slicer-tools, .file-tools, .controls, .settings-tools { flex-direction: column; gap: 10px; }
-            .player-container { padding: 1.5rem; }
-            .top-actions { top: 1rem; right: 1rem; }
+            /* 1. Tighten the main container and header */
+            .top-actions { top: 0.5rem; right: 0.5rem; }
+            h2 { margin-top: 1.5rem; font-size: 1.1rem; margin-bottom: 0.5rem; }
+            .player-container { padding: 0.75rem; border-radius: 12px; }
+            
+            /* 2. Compact the Upload Box and Video */
+            .file-upload-label { padding: 0.5rem; font-size: 0.8rem; border-radius: 10px; margin-bottom: 0.5rem; }
+            .file-upload-label i { font-size: 1.2rem; }
+            video { margin-bottom: 0.5rem; border-radius: 10px; }
+
+            /* 3. The Grid Magic: Dissolve original rows to create one master grid */
+            .right-panel {
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 6px; /* Tighter spacing between buttons */
+            }
+            .slicer-tools, .controls, .file-tools { display: contents; }
+
+            /* 4. Transform main buttons into ultra-tiny Action Bar style */
+            button {
+                flex-direction: column !important;
+                padding: 6px 2px !important;
+                font-size: 0.6rem !important;
+                border-radius: 8px !important;
+                gap: 2px !important;
+                text-align: center;
+            }
+            button i { font-size: 1.1rem !important; margin: 0 !important; }
+
+            /* 5. Force the exact layout order for the Grid */
+            #markCutBtn { order: 1; }
+            #toggleLoopBtn { order: 2; }
+            #prevBtn { order: 3; }
+            #nextBtn { order: 4; }
+
+            /* 6. Settings Bar (Hold Button) - Squished vertically and horizontally */
+            .settings-tools { 
+                order: 5; 
+                grid-column: span 4; 
+                margin-bottom: 0;
+                padding: 4px 8px; /* Extremely thin padding */
+                font-size: 0.75rem; /* Smaller text */
+                border-radius: 8px;
+                min-height: 2px; /* Forces the box to be short */
+            }
+            .settings-tools span { font-size: 0.75rem; }
+            .delay-input-wrapper input { 
+                padding: 2px !important; 
+                width: 35px !important; 
+                height: 20px;
+                font-size: 0.75rem !important;
+            }
+            
+            /* 7. Export/Import (Two per row at the bottom) */
+            #exportBtn { order: 6; grid-column: span 2; }
+            #importBtn { order: 7; grid-column: span 2; }
+
+            /* 8. Status and List */
+            .status { order: 8; grid-column: span 4; margin: 0; padding: 0.5rem; font-size: 0.75rem; }
+            ul { order: 9; grid-column: span 4; margin-top: 0; gap: 6px; }
+            li { padding: 6px 10px !important; font-size: 0.75rem !important; border-radius: 8px; }
+            
+            /* Prevent Delete buttons from adopting the YouTube icon-on-top style */
+            li button { flex-direction: row !important; padding: 4px 8px !important; font-size: 0.7rem !important; }
         }
     </style>
 </head>
 <body>
     <div class="player-container">
+        <!-- Top Actions -->
         <div class="top-actions">
             <button id="supportBtn" class="action-btn donate-btn" aria-label="Support the project">
                 <i class="ph-fill ph-heart"></i> Support
@@ -304,6 +367,7 @@
         
         <div class="layout-split">
             
+            <!-- Left Side: ONLY Video and Upload -->
             <div class="left-panel">
                 <div class="file-upload-wrapper">
                     <div class="file-upload-label">
@@ -315,12 +379,14 @@
                 <video id="quranVideo" controls playsinline></video>
             </div>
 
+            <!-- Right Side: ALL Controls, Status & List -->
             <div class="right-panel">
                 <div class="slicer-tools">
                     <button id="markCutBtn"><i class="ph ph-scissors"></i> Cut Ayah Here</button>
                     <button id="toggleLoopBtn"><i class="ph ph-arrows-clockwise"></i> Start Looping</button>
                 </div>
 
+                <!-- Settings Tools for Delay -->
                 <div class="settings-tools">
                     <span><i class="ph ph-hourglass-high"></i> Pause between loops:</span>
                     <div class="delay-input-wrapper">
@@ -329,6 +395,7 @@
                     </div>
                 </div>
 
+                <!-- Export & Import Buttons -->
                 <div class="file-tools">
                     <button id="exportBtn"><i class="ph ph-download-simple"></i> Export Cuts</button>
                     <input type="file" id="importInput" accept=".json" style="display: none;">
@@ -348,6 +415,7 @@
         </div>
     </div>
 
+    <!-- Support Modal Popup -->
     <div id="supportModal" class="modal-overlay">
         <div class="modal-content">
             <button class="close-modal" id="closeModalBtn"><i class="ph ph-x"></i></button>
