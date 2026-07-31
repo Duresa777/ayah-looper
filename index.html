@@ -3,130 +3,405 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quran Recitation Looper</title>
+    <title>Ayah Looper</title>
+    <link rel="icon" type="image/jpeg" href="favicon.png">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
     <style>
+        /* Relaxing Light Theme Variables */
+        :root {
+            --bg-color: #f0f4f2;
+            --surface: #ffffff;
+            --text-main: #2d3748;
+            --text-muted: #718096;
+            --border-color: #e2e8f0;
+            
+            --primary: #5e8b7e;
+            --primary-hover: #4a6f65;
+            --secondary: #7b90a7;
+            --secondary-hover: #627385;
+            --warning: #d98a6c;
+            --warning-hover: #c0795e;
+            --danger: #c96a6a;
+        }
+
+        /* Dark Theme Variables */
+        body.dark-mode {
+            --bg-color: #121413;
+            --surface: #1e2120;
+            --text-main: #e2e8f0;
+            --text-muted: #a0aec0;
+            --border-color: #2d3748;
+        }
+
         body { 
-            font-family: system-ui, -apple-system, sans-serif; 
-            max-width: 600px; 
-            margin: 2rem auto; 
-            text-align: center; 
-            background-color: #f3f4f6; 
-            padding: 0 15px;
-        }
-        .player-container {
-            background: white;
-            padding: 2rem 1.5rem;
-            border-radius: 16px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
-        }
-        h2 {
-            margin-top: 0;
-            color: #111827;
-        }
-        video { 
-            width: 100%; 
-            background: #000; 
-            border-radius: 12px; 
-            margin: 1.5rem 0; 
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-        .controls, .slicer-tools { 
-            display: flex; 
-            justify-content: center; 
-            gap: 1rem; 
-            margin-top: 1.5rem;
-            flex-wrap: wrap;
-        }
-        button { 
-            padding: 14px 24px; 
-            font-size: 16px; 
-            font-weight: 600;
-            cursor: pointer; 
-            border: none; 
-            border-radius: 10px; 
-            color: white; 
-            transition: all 0.2s ease-in-out;
-            flex: 1;
-            min-width: 140px;
-        }
-        button:disabled { 
-            background: #cbd5e1 !important; 
-            cursor: not-allowed; 
-            transform: none !important; 
-        }
-        button:active:not(:disabled) { 
-            transform: scale(0.97); 
-        }
-        
-        #prevBtn, #nextBtn { background: #2563eb; }
-        #prevBtn:hover:not(:disabled), #nextBtn:hover:not(:disabled) { background: #1d4ed8; }
-        
-        #markCutBtn { background: #16a34a; }
-        #markCutBtn:hover:not(:disabled) { background: #15803d; }
-        
-        #toggleLoopBtn { background: #ea580c; }
-        #toggleLoopBtn:hover:not(:disabled) { background: #c2410c; }
-        
-        .status { 
-            margin-top: 2rem; 
-            padding: 1rem;
-            background: #f8fafc;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 500; 
-            color: #475569;
-        }
-        ul {
-            list-style: none; 
-            padding: 0; 
-            text-align: left; 
-            margin-top: 1.5rem; 
-            font-family: ui-monospace, SFMono-Regular, monospace;
-        }
-        li {
-            padding: 12px 16px; 
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            margin-bottom: 8px;
-            background: #f8fafc;
-            color: #334155;
-            font-size: 0.95rem;
-        }
-        input[type="file"] {
-            width: 100%;
-            padding: 10px;
-            border: 2px dashed #cbd5e1;
-            border-radius: 8px;
-            background: #f8fafc;
-            cursor: pointer;
+            font-family: 'Poppins', sans-serif; 
+            background: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
             box-sizing: border-box;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        .player-container {
+            background: var(--surface);
+            width: 100%;
+            max-width: 650px; /* Default for mobile/tablet */
+            padding: 2.5rem;
+            border-radius: 24px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        /* Top Actions (Dark Mode & Donate) */
+        .top-actions {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            display: flex;
+            gap: 10px;
+            z-index: 10;
+        }
+
+        .action-btn {
+            background: transparent;
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            border-radius: 50px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1rem;
+            font-weight: 500;
+            padding: 0 16px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .action-btn.icon-only {
+            width: 40px;
+            padding: 0;
+            border-radius: 50%;
+        }
+
+        .action-btn:hover { background: var(--bg-color); }
+        
+        .donate-btn i {
+            color: var(--danger);
+            margin-right: 6px;
+            font-size: 1.2rem;
+        }
+
+        h2 {
+            margin: 0 0 1.5rem 0;
+            font-size: 1.75rem;
+            font-weight: 600;
+            text-align: center;
+            letter-spacing: -0.5px;
+        }
+
+        /* --- Split Layout Styles (Mobile Default) --- */
+        .layout-split {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .left-panel, .right-panel {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .file-upload-wrapper { position: relative; margin-bottom: 1rem; }
+
+        .file-upload-label {
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            padding: 1.5rem; background: var(--bg-color); border: 2px dashed var(--border-color);
+            border-radius: 16px; text-align: center; color: var(--text-muted); font-weight: 500;
+            cursor: pointer; transition: all 0.3s ease;
+        }
+        .file-upload-label i { font-size: 1.5rem; }
+        .file-upload-label:hover { border-color: var(--primary); color: var(--primary); }
+
+        input[type="file"] {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;
+        }
+
+        video { 
+            width: 100%; background: #000; border-radius: 16px; margin: 0 0 1rem 0; 
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            max-height: 50vh;
+        }
+
+        .slicer-tools, .file-tools, .controls { display: flex; gap: 1rem; margin-bottom: 1rem; }
+
+        /* Settings Box for Delay */
+        .settings-tools {
+            display: flex; justify-content: space-between; align-items: center; 
+            background: var(--bg-color); padding: 12px 16px; border-radius: 12px; 
+            border: 1px solid var(--border-color); margin-bottom: 1rem;
+        }
+        .settings-tools span { font-weight: 500; font-size: 0.95rem; display: flex; align-items: center; gap: 8px; }
+        .delay-input-wrapper { display: flex; align-items: center; gap: 8px; }
+        .delay-input-wrapper input {
+            width: 60px; padding: 6px; border-radius: 8px; border: 1px solid var(--border-color);
+            background: var(--surface); color: var(--text-main); text-align: center; font-weight: 600; font-family: 'Poppins', sans-serif;
+        }
+
+        button { 
+            flex: 1; padding: 12px 20px; font-size: 1rem; font-weight: 500; font-family: inherit;
+            cursor: pointer; border: none; border-radius: 12px; color: white; transition: all 0.2s ease-in-out;
+            display: flex; justify-content: center; align-items: center; gap: 8px;
+        }
+        button i { font-size: 1.2rem; }
+        button:active:not(:disabled) { transform: scale(0.96); }
+        button:disabled { background: var(--border-color) !important; color: var(--text-muted); cursor: not-allowed; }
+
+        #markCutBtn { background: var(--primary); }
+        #markCutBtn:hover:not(:disabled) { background: var(--primary-hover); }
+
+        #toggleLoopBtn { background: var(--warning); }
+        #toggleLoopBtn:hover:not(:disabled) { background: var(--warning-hover); }
+
+        #prevBtn, #nextBtn { background: var(--secondary); }
+        #prevBtn:hover:not(:disabled), #nextBtn:hover:not(:disabled) { background: var(--secondary-hover); }
+
+        #exportBtn, #importBtn { background: var(--bg-color); color: var(--text-main); border: 1px solid var(--border-color); }
+        #exportBtn:hover, #importBtn:hover { background: var(--border-color); }
+
+        .status { 
+            background: var(--bg-color); border: 1px solid var(--border-color); padding: 1rem;
+            border-radius: 12px; font-size: 0.95rem; font-weight: 500; text-align: center; color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+
+        ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+
+        li {
+            background: var(--surface); border: 1px solid var(--border-color); padding: 12px 16px !important;
+            border-radius: 12px; font-weight: 500; display: flex; justify-content: space-between; align-items: center;
+        }
+        li button {
+            background: var(--danger) !important; border-radius: 8px !important; font-size: 0.85rem !important;
+            padding: 8px 12px !important; min-width: auto; flex: none;
+        }
+
+        /* --- Support Modal Styles --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(4px);
+            display: none; justify-content: center; align-items: center;
+            z-index: 1000; opacity: 0; transition: opacity 0.3s ease;
+        }
+        .modal-overlay.show { display: flex; opacity: 1; }
+        
+        .modal-content {
+            background: var(--surface); padding: 2rem; border-radius: 24px;
+            width: 90%; max-width: 400px; text-align: center; position: relative;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            transform: translateY(20px); transition: transform 0.3s ease;
+        }
+        .modal-overlay.show .modal-content { transform: translateY(0); }
+        
+        .close-modal {
+            position: absolute; top: 1rem; right: 1rem; background: transparent; border: none; font-size: 1.5rem;
+            color: var(--text-muted); cursor: pointer; padding: 0; min-width: auto; box-shadow: none;
+        }
+        .close-modal:hover { color: var(--text-main); background: transparent; }
+        
+        .modal-content h3 { margin: 0 0 0.5rem 0; font-size: 1.4rem; color: var(--text-main); }
+        .modal-content p { color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1.5rem; }
+        
+        .support-options { display: flex; flex-direction: column; gap: 1rem; }
+        
+        .support-link {
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            padding: 14px; border-radius: 12px; font-weight: 600; text-decoration: none;
+            transition: transform 0.2s ease; color: white;
+        }
+        .support-link:active { transform: scale(0.96); }
+        
+        .ig-link { background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); }
+        .ig-link:hover { filter: brightness(1.1); }
+        
+        .divider { display: flex; align-items: center; text-align: center; margin: 0.5rem 0; }
+        .divider::before, .divider::after { content: ''; flex: 1; border-bottom: 1px solid var(--border-color); }
+        .divider span { padding: 0 10px; color: var(--text-muted); font-size: 0.85rem; font-weight: 600; }
+        .ig-text { margin-bottom: 0.5rem !important; font-size: 0.85rem !important; }
+
+        /* --- MEDIA QUERY: Transform to Side-by-Side Dashboard on Big Displays --- */
+        @media (min-width: 1024px) {
+            .player-container {
+                max-width: 1200px;
+                height: 90vh; /* Locks the height so the page doesn't scroll */
+                display: flex;
+                flex-direction: column;
+            }
+            .layout-split {
+                flex-direction: row; 
+                gap: 2.5rem;
+                flex: 1; 
+                min-height: 0; /* Prevents overflow */
+            }
+            .left-panel {
+                flex: 1.2; 
+                display: flex;
+                flex-direction: column;
+                min-height: 0;
+            }
+            .right-panel {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                min-height: 0;
+            }
+            video {
+                flex: 1;
+                margin: 0; 
+                min-height: 0;
+                object-fit: contain; /* Shrinks video perfectly into the box */
+            }
+            ul {
+                overflow-y: auto; 
+                padding-right: 10px;
+                flex-grow: 1;
+            }
+            /* Custom Scrollbar */
+            ul::-webkit-scrollbar { width: 6px; }
+            ul::-webkit-scrollbar-track { background: transparent; }
+            ul::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 10px; }
+        }
+
+        @media (max-width: 480px) {
+            .slicer-tools, .file-tools, .controls, .settings-tools { flex-direction: column; gap: 10px; }
+            .player-container { padding: 1.5rem; }
+            .top-actions { top: 1rem; right: 1rem; }
         }
     </style>
 </head>
 <body>
     <div class="player-container">
+        <div class="top-actions">
+            <button id="supportBtn" class="action-btn donate-btn" aria-label="Support the project">
+                <i class="ph-fill ph-heart"></i> Support
+            </button>
+            <button id="themeToggle" class="action-btn icon-only" aria-label="Toggle Dark Mode">
+                <i class="ph ph-moon"></i>
+            </button>
+        </div>
+
         <h2>Ayah Looper</h2>
         
-        <input type="file" id="videoUpload" accept="video/mp4,video/*">
-        
-        <video id="quranVideo" controls playsinline></video>
+        <div class="layout-split">
+            
+            <div class="left-panel">
+                <div class="file-upload-wrapper">
+                    <div class="file-upload-label">
+                        <i class="ph ph-video-camera"></i> Tap here to upload your Quran video
+                    </div>
+                    <input type="file" id="videoUpload" accept="video/mp4,video/*,audio/mp3,audio/*">
+                </div>
+                
+                <video id="quranVideo" controls playsinline></video>
+            </div>
 
-        <div class="slicer-tools">
-            <button id="markCutBtn">✂️ Cut Ayah Here</button>
-            <button id="toggleLoopBtn">▶️ Start Looping</button>
+            <div class="right-panel">
+                <div class="slicer-tools">
+                    <button id="markCutBtn"><i class="ph ph-scissors"></i> Cut Ayah Here</button>
+                    <button id="toggleLoopBtn"><i class="ph ph-arrows-clockwise"></i> Start Looping</button>
+                </div>
+
+                <div class="settings-tools">
+                    <span><i class="ph ph-hourglass-high"></i> Pause between loops:</span>
+                    <div class="delay-input-wrapper">
+                        <input type="number" id="loopDelay" value="0" min="0" step="0.5">
+                        <span>sec</span>
+                    </div>
+                </div>
+
+                <div class="file-tools">
+                    <button id="exportBtn"><i class="ph ph-download-simple"></i> Export Cuts</button>
+                    <input type="file" id="importInput" accept=".json" style="display: none;">
+                    <button id="importBtn"><i class="ph ph-upload-simple"></i> Import Cuts</button>
+                </div>
+
+                <div class="controls">
+                    <button id="prevBtn" disabled><i class="ph ph-caret-left"></i> Previous</button>
+                    <button id="nextBtn" disabled>Next <i class="ph ph-caret-right"></i></button>
+                </div>
+
+                <div class="status" id="statusText">1. Upload a video.<br>2. Play it and click "Cut Ayah Here" to make pieces.</div>
+                
+                <ul id="sliceList"></ul>
+            </div>
+
         </div>
-
-        <div class="controls">
-            <button id="prevBtn" disabled>Previous Piece</button>
-            <button id="nextBtn" disabled>Next Piece</button>
-        </div>
-
-        <div class="status" id="statusText">1. Upload a video.<br>2. Play it and click "Cut Ayah Here" to make pieces.</div>
-        
-        <ul id="sliceList"></ul>
     </div>
 
-    <!-- The cache buster prevents phones from getting stuck on old code -->
-    <script src="app.js?v=3"></script>
+    <div id="supportModal" class="modal-overlay">
+        <div class="modal-content">
+            <button class="close-modal" id="closeModalBtn"><i class="ph ph-x"></i></button>
+            <h3>Support the Creator</h3>
+            <p>If Ayah Looper helped you, consider supporting its development!</p>
+            
+            <div class="support-options">
+                <a href="https://ko-fi.com/ayahloop" target="_blank" class="support-link donate-link" style="background: #29abe0; color: white;">
+                    <i class="ph-fill ph-coffee"></i> Support on Ko-fi
+                </a>
+                
+                <div class="divider"><span>OR</span></div>
+                
+                <p class="ig-text">If you can't donate right now, a follow means the world!</p>
+                <a href="https://instagram.com/ayahloopcom" target="_blank" class="support-link ig-link">
+                    <i class="ph ph-instagram-logo"></i> Follow on Instagram
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Dark Mode Logic ---
+        const themeToggle = document.getElementById('themeToggle');
+        const icon = themeToggle.querySelector('i');
+        
+        if (localStorage.getItem('theme') === 'dark') {
+            document.body.classList.add('dark-mode');
+            icon.classList.replace('ph-moon', 'ph-sun');
+        }
+
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            if (document.body.classList.contains('dark-mode')) {
+                localStorage.setItem('theme', 'dark');
+                icon.classList.replace('ph-moon', 'ph-sun');
+            } else {
+                localStorage.setItem('theme', 'light');
+                icon.classList.replace('ph-sun', 'ph-moon');
+            }
+        });
+
+        // --- Support Modal Logic ---
+        const supportBtn = document.getElementById('supportBtn');
+        const supportModal = document.getElementById('supportModal');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+
+        supportBtn.addEventListener('click', () => { supportModal.classList.add('show'); });
+        closeModalBtn.addEventListener('click', () => { supportModal.classList.remove('show'); });
+        supportModal.addEventListener('click', (e) => {
+            if (e.target === supportModal) supportModal.classList.remove('show');
+        });
+    </script>
+
+    <script src="app.js?v=11"></script>
 </body>
 </html>

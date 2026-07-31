@@ -6,13 +6,18 @@ const statusText = document.getElementById('statusText');
 const markCutBtn = document.getElementById('markCutBtn');
 const toggleLoopBtn = document.getElementById('toggleLoopBtn');
 const sliceList = document.getElementById('sliceList');
+const loopDelayInput = document.getElementById('loopDelay');
+
+const exportBtn = document.getElementById('exportBtn');
+const importBtn = document.getElementById('importBtn');
+const importInput = document.getElementById('importInput');
 
 let slices = [];
 let currentSliceIndex = 0;
 let lastCutTime = 0.0;
 let isLooping = false; 
+let loopTimeout = null; 
 
-// --- Helper: Save and Load from Phone Memory ---
 function saveCutsToPhone() {
     localStorage.setItem('savedQuranCuts', JSON.stringify(slices));
 }
@@ -21,71 +26,86 @@ function loadCutsFromPhone() {
     const savedData = localStorage.getItem('savedQuranCuts');
     if (savedData) {
         slices = JSON.parse(savedData);
-        
-        renderSlices(); // Draw the list with delete buttons
-
+        renderSlices();
         if (slices.length > 0) {
             lastCutTime = slices[slices.length - 1].end;
         }
-        
-        statusText.innerHTML = `Loaded ${slices.length} saved cuts! Press play on the video.`;
+        statusText.innerHTML = `Loaded ${slices.length} saved cuts! Press play.`;
     } else {
-        statusText.innerHTML = "Video loaded! Press play on the video screen, then click 'Cut Ayah Here'.";
+        statusText.innerHTML = "Upload a file! Press play, then click 'Cut' or press 'C'.";
     }
 }
 
-// --- NEW / RESTORED: The Render Function with Delete Button ---
+exportBtn.addEventListener('click', () => {
+    if (slices.length === 0) {
+        alert("You don't have any cuts to export yet!");
+        return;
+    }
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(slices, null, 2));
+    const downloadAnchorNode = document.createElement('a');
+    downloadAnchorNode.setAttribute("href", dataStr);
+    downloadAnchorNode.setAttribute("download", "ayah_cuts.json");
+    document.body.appendChild(downloadAnchorNode); 
+    downloadAnchorNode.click();
+    downloadAnchorNode.remove();
+});
+
+importBtn.addEventListener('click', () => {
+    importInput.click(); 
+});
+
+importInput.addEventListener('change', (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const importedSlices = JSON.parse(e.target.result);
+            if (Array.isArray(importedSlices)) {
+                slices = importedSlices;
+                lastCutTime = slices.length > 0 ? slices[slices.length - 1].end : 0.0;
+                saveCutsToPhone();
+                renderSlices();
+                statusText.innerHTML = `Successfully imported ${slices.length} cuts!`;
+            } else {
+                alert("This file doesn't look like Ayah Looper cuts.");
+            }
+        } catch (error) {
+            alert("Error reading the file. Make sure it's a valid .json file.");
+        }
+        importInput.value = ""; 
+    };
+    reader.readAsText(file);
+});
+
 function renderSlices() {
-    sliceList.innerHTML = ""; // Clear the current visual list
-    
+    sliceList.innerHTML = ""; 
     slices.forEach((slice, index) => {
-        // Fix the IDs just in case a middle piece was deleted
         slice.id = index + 1; 
-        
         const listItem = document.createElement('li');
-        listItem.style.display = "flex";
-        listItem.style.justifyContent = "space-between";
-        listItem.style.alignItems = "center";
-        
         const textSpan = document.createElement('span');
         textSpan.textContent = `Ayah ${slice.id}: ${slice.start.toFixed(1)}s to ${slice.end.toFixed(1)}s`;
         
-        // Create the Delete Button
         const deleteBtn = document.createElement('button');
-        deleteBtn.textContent = "❌ Delete";
-        deleteBtn.style.background = "#ef4444"; // Red color
-        deleteBtn.style.padding = "6px 12px";
-        deleteBtn.style.fontSize = "12px";
-        deleteBtn.style.minWidth = "auto"; // Prevents the button from stretching
-        deleteBtn.style.flex = "none";
+        deleteBtn.innerHTML = '<i class="ph ph-trash"></i> Delete';
         
-        // What happens when they click Delete
         deleteBtn.addEventListener('click', () => {
-            // 1. Remove from array
             slices.splice(index, 1);
-            
-            // 2. Fix the last cut time
-            if (slices.length > 0) {
-                lastCutTime = slices[slices.length - 1].end;
-            } else {
-                lastCutTime = 0.0;
-            }
-            
-            // 3. Save the updated (smaller) array to the phone's memory!
+            lastCutTime = slices.length > 0 ? slices[slices.length - 1].end : 0.0;
             saveCutsToPhone();
             
-            // 4. Stop looping if they delete while practicing
             if (isLooping) {
                 isLooping = false;
+                clearTimeout(loopTimeout);
+                loopTimeout = null;
                 video.pause();
-                toggleLoopBtn.textContent = "▶️ Start Looping";
-                toggleLoopBtn.style.background = "#ea580c";
+                toggleLoopBtn.innerHTML = '<i class="ph ph-arrows-clockwise"></i> Start Looping';
+                toggleLoopBtn.style.background = "var(--warning)";
                 prevBtn.disabled = true;
                 nextBtn.disabled = true;
                 statusText.textContent = "Looping stopped because a cut was deleted.";
             }
-            
-            // 5. Redraw the list
             renderSlices();
         });
         
@@ -95,106 +115,181 @@ function renderSlices() {
     });
 }
 
-// --- 1. Load Local Video File ---
 videoUpload.addEventListener('change', function() {
     const file = this.files[0];
     if (file) {
         video.src = URL.createObjectURL(file);
-        
         isLooping = false;
-        toggleLoopBtn.textContent = "▶️ Start Looping";
-        toggleLoopBtn.style.background = "#ea580c";
-        
+        clearTimeout(loopTimeout);
+        loopTimeout = null;
+        toggleLoopBtn.innerHTML = '<i class="ph ph-arrows-clockwise"></i> Start Looping';
+        toggleLoopBtn.style.background = "var(--warning)";
         loadCutsFromPhone();
     }
 });
 
-// --- 2. The Slicing Tool with Visual Feedback ---
 markCutBtn.addEventListener('click', () => {
     const cutTime = video.currentTime;
-    
     if (cutTime <= lastCutTime) return;
 
-    const newSlice = {
-        id: slices.length + 1,
-        start: lastCutTime,
-        end: cutTime
-    };
-    
+    const newSlice = { id: slices.length + 1, start: lastCutTime, end: cutTime };
     slices.push(newSlice); 
     lastCutTime = cutTime; 
     
     saveCutsToPhone(); 
-    renderSlices(); // Draw the new cut with a delete button
+    renderSlices(); 
 
-    const originalText = markCutBtn.textContent;
-    markCutBtn.textContent = "✅ Saved!";
-    markCutBtn.style.background = "#059669"; 
-    
+    const originalHTML = markCutBtn.innerHTML;
+    markCutBtn.innerHTML = '<i class="ph ph-check-circle"></i> Saved!';
     if (navigator.vibrate) navigator.vibrate(50);
 
-    setTimeout(() => {
-        markCutBtn.textContent = originalText;
-        markCutBtn.style.background = "#16a34a"; 
-    }, 600); 
+    setTimeout(() => { markCutBtn.innerHTML = originalHTML; }, 800); 
 });
 
-// --- 3. Toggle Looping Mode ---
+function getTotalSlicesCount() {
+    if (video.duration && lastCutTime < video.duration - 0.5) {
+        return slices.length + 1;
+    }
+    return slices.length;
+}
+
+function getActiveSlice() {
+    if (slices.length === 0 && currentSliceIndex === 0) {
+        if (video.duration) return { id: "Remaining", start: 0, end: video.duration };
+        return null;
+    }
+    
+    if (currentSliceIndex < slices.length) {
+        return slices[currentSliceIndex];
+    } else {
+        return {
+            id: "Remaining",
+            start: lastCutTime,
+            end: video.duration || video.currentTime + 1 
+        };
+    }
+}
+
 toggleLoopBtn.addEventListener('click', () => {
-    if (slices.length === 0) {
-        alert("Please make at least one cut first!");
+    if (!video.src) {
+        alert("Please upload a file first!");
         return;
     }
     
     isLooping = !isLooping; 
     
     if (isLooping) {
-        toggleLoopBtn.textContent = "⏹️ Stop Looping";
-        toggleLoopBtn.style.background = "#dc2626";
+        toggleLoopBtn.innerHTML = '<i class="ph ph-stop-circle"></i> Stop Looping';
+        toggleLoopBtn.style.background = "var(--danger)";
         currentSliceIndex = 0; 
-        video.currentTime = slices[currentSliceIndex].start;
+        
+        const active = getActiveSlice();
+        if (active) video.currentTime = active.start;
         video.play();
         updateUI();
     } else {
-        toggleLoopBtn.textContent = "▶️ Start Looping";
-        toggleLoopBtn.style.background = "#ea580c";
+        toggleLoopBtn.innerHTML = '<i class="ph ph-arrows-clockwise"></i> Start Looping';
+        toggleLoopBtn.style.background = "var(--warning)";
         statusText.textContent = "Looping stopped. You can make more cuts.";
         prevBtn.disabled = true;
         nextBtn.disabled = true;
+        
+        clearTimeout(loopTimeout);
+        loopTimeout = null;
     }
 });
 
-// --- 4. The Core Looping Engine ---
 video.addEventListener('timeupdate', () => {
-    if (!video.src || !isLooping || slices.length === 0) return; 
+    if (!video.src || !isLooping) return; 
 
-    const currentSlice = slices[currentSliceIndex];
+    const currentSlice = getActiveSlice();
+    if (!currentSlice) return;
+
     if (video.currentTime >= currentSlice.end) {
-        video.currentTime = currentSlice.start;
-        video.play(); 
+        if (loopTimeout) return; 
+        
+        video.pause();
+        
+        const delayMs = (parseFloat(loopDelayInput.value) || 0) * 1000;
+        
+        if (delayMs > 0) {
+            statusText.textContent = `Pausing for ${loopDelayInput.value}s...`;
+        }
+
+        loopTimeout = setTimeout(() => {
+            video.currentTime = currentSlice.start;
+            video.play();
+            loopTimeout = null; 
+            updateUI(); 
+        }, delayMs);
     }
 });
 
-// --- 5. Navigation Controls ---
 nextBtn.addEventListener('click', () => {
-    if (currentSliceIndex < slices.length - 1 && isLooping) {
+    const totalSlices = getTotalSlicesCount();
+    
+    if (currentSliceIndex < totalSlices - 1 && isLooping) {
+        clearTimeout(loopTimeout); 
+        loopTimeout = null;
+        
         currentSliceIndex++;
-        video.currentTime = slices[currentSliceIndex].start;
-        updateUI();
+        const active = getActiveSlice();
+        if (active) {
+            video.currentTime = active.start;
+            video.play();
+            updateUI();
+        }
     }
 });
 
 prevBtn.addEventListener('click', () => {
     if (currentSliceIndex > 0 && isLooping) {
+        clearTimeout(loopTimeout);
+        loopTimeout = null;
+        
         currentSliceIndex--;
-        video.currentTime = slices[currentSliceIndex].start;
-        updateUI();
+        const active = getActiveSlice();
+        if (active) {
+            video.currentTime = active.start;
+            video.play();
+            updateUI();
+        }
     }
 });
 
 function updateUI() {
-    const currentSlice = slices[currentSliceIndex];
-    statusText.textContent = `Looping Ayah ${currentSlice.id} ( ${currentSlice.start.toFixed(1)}s to ${currentSlice.end.toFixed(1)}s )`;
+    const currentSlice = getActiveSlice();
+    if (!currentSlice) return;
+    
+    const totalSlices = getTotalSlicesCount();
+    
+    statusText.textContent = `Looping ${currentSlice.id === 'Remaining' ? 'Uncut Audio/Video' : 'Ayah ' + currentSlice.id} ( ${currentSlice.start.toFixed(1)}s to ${currentSlice.end.toFixed(1)}s )`;
+    
     prevBtn.disabled = currentSliceIndex === 0;
-    nextBtn.disabled = currentSliceIndex === slices.length - 1;
+    nextBtn.disabled = currentSliceIndex >= totalSlices - 1;
 }
+
+// --- NEW: Keyboard Shortcuts ---
+document.addEventListener('keydown', (event) => {
+    // Prevent shortcuts from firing if the user is typing in the delay input box
+    if (event.target.tagName === 'INPUT') return;
+
+    // Check if media is loaded
+    if (!video.src || video.src === window.location.href) return;
+
+    // Spacebar: Play or Pause
+    if (event.code === 'Space') {
+        event.preventDefault(); // Stop page from scrolling down
+        
+        if (video.paused) {
+            video.play();
+        } else {
+            video.pause();
+        }
+    }
+
+    // Letter 'C': Trigger Cut
+    if (event.key.toLowerCase() === 'c') {
+        markCutBtn.click();
+    }
+});
