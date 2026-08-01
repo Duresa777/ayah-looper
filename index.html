@@ -371,11 +371,21 @@
             <div class="left-panel">
                 <div class="file-upload-wrapper">
                     <div class="file-upload-label">
-                        <i class="ph ph-video-camera"></i> Tap here to upload your Quran video
+                        <i class="ph ph-video-camera"></i> Tap to upload a video or audio file
                     </div>
                     <input type="file" id="videoUpload" accept="video/mp4,video/*,audio/mp3,audio/*">
                 </div>
                 
+                <a href="library.html" style="display: flex; align-items: center; justify-content: center; gap: 10px; padding: 1rem; background: var(--surface); border: 2px solid var(--primary); border-radius: 16px; text-align: center; color: var(--primary); font-weight: 600; text-decoration: none; margin-bottom: 1rem; transition: all 0.2s;">
+                    <i class="ph-fill ph-books" style="font-size: 1.5rem;"></i> Browse Free Audio Library
+                </a>
+                
+                <!-- NEW: Beautiful Audio Display (Hidden by default) -->
+                <div id="audioDisplay" style="display: none; background: linear-gradient(135deg, var(--primary, #2b6cb0), #2a4365); color: white; padding: 3.5rem 1rem; border-radius: 16px; text-align: center; margin-bottom: 1rem; box-shadow: 0 8px 16px rgba(0,0,0,0.15);">
+                    <h2 id="displayTitle" style="font-size: 2.2rem; margin: 0 0 0.5rem 0; font-weight: 700;">Surah</h2>
+                    <p id="displayReciter" style="font-size: 1.1rem; margin: 0; opacity: 0.9;">by Al-Qari</p>
+                </div>
+
                 <video id="quranVideo" controls playsinline></video>
             </div>
 
@@ -468,8 +478,56 @@
         supportModal.addEventListener('click', (e) => {
             if (e.target === supportModal) supportModal.classList.remove('show');
         });
-    </script>
+       // --- API Library Connection Logic ---
+        window.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const passedAudio = urlParams.get('audio');
+            const passedTitle = urlParams.get('title');
+            const passedReciter = urlParams.get('reciter'); // Grab the new Reciter name!
+
+            if (passedAudio) {
+                const player = document.getElementById('quranVideo');
+                const statusBox = document.getElementById('statusText');
+                const audioDisplay = document.getElementById('audioDisplay');
+                
+                // Hide the upload box
+                document.querySelector('.file-upload-wrapper').style.display = 'none';
+                
+               // 1. Show the beautiful display and inject the names
+                audioDisplay.style.display = 'block';
+                document.getElementById('displayTitle').innerText = passedTitle;
+                
+                if (passedReciter) {
+                    document.getElementById('displayReciter').innerText = `by Al-Qari ${passedReciter}`;
+                }
+
+                // 2. FORCE the video screen down to just an audio control bar
+                player.style.setProperty('height', '54px', 'important');
+                player.style.setProperty('min-height', '54px', 'important');
+                player.style.setProperty('max-height', '54px', 'important');
+                player.style.setProperty('background', 'transparent', 'important');
+                player.style.setProperty('border-radius', '30px', 'important'); // Rounds the edges!
+                
+                // CATCH ERRORS
+                player.addEventListener('error', () => {
+                    statusBox.innerHTML = `❌ <strong>Error loading ${passedTitle}.</strong><br>The server is busy or the file is missing. Try a different reciter.`;
+                });
+
+                // Load the MP3 directly into the player
+                player.src = passedAudio;
+
+                // Tell the user to press play
+                statusBox.innerHTML = `✅ <strong>${passedTitle}</strong> is ready!<br>Tap the Play button on the bar above to begin.`;
+            }
+        });
+    </script> <!-- THIS IS THE FIX: Close the script here! -->
+
+    <!-- SEO Footer for Google Rankings (Floating Bottom Right Widget) -->
+    <footer style="position: fixed; bottom: 20px; right: 20px; max-width: 320px; text-align: right; background: var(--surface); padding: 1.5rem; border-radius: 16px; border: 1px solid var(--border-color); box-shadow: 0 8px 24px rgba(0,0,0,0.08); z-index: 100;">
+        <h3 style="font-size: 1rem; color: var(--primary); margin: 0 0 0.5rem 0; font-weight: 600;">About Ayah Looper</h3>
+        <p style="color: var(--text-muted); font-size: 0.8rem; line-height: 1.5; margin: 0;">A free tool to cut, loop, and repeat specific Ayahs to assist with Hifz (memorization). Stream high-quality Qari audio instantly.</p>
+    </footer>
 
     <script src="app.js?v=11"></script>
 </body>
-</html>
+</html> 

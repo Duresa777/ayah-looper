@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Library - Ayah Looper</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
+    <style>
+        /* Shared Themes with Ayah Looper */
+        :root {
+            --bg-color: #f0f4f2;
+            --surface: #ffffff;
+            --text-main: #2d3748;
+            --text-muted: #718096;
+            --border-color: #e2e8f0;
+            --primary: #5e8b7e;
+            --primary-hover: #4a6f65;
+            --secondary: #7b90a7;
+        }
+
+        body.dark-mode {
+            --bg-color: #121413;
+            --surface: #1e2120;
+            --text-main: #e2e8f0;
+            --text-muted: #a0aec0;
+            --border-color: #2d3748;
+        }
+
+        body { 
+            font-family: 'Poppins', sans-serif; 
+            background: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            margin: 0;
+            padding: 2rem;
+            box-sizing: border-box;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        /* Top Navigation */
+        .nav-bar {
+            max-width: 1200px;
+            margin: 0 auto 2rem auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .back-btn {
+            background: var(--surface);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            padding: 10px 20px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .back-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            transform: translateX(-4px);
+        }
+
+        /* Library Header & Filters */
+        .library-header {
+            max-width: 1200px;
+            margin: 0 auto 2rem auto;
+            text-align: center;
+        }
+
+        .library-header h1 {
+            font-size: 2.5rem;
+            margin: 0 0 0.5rem 0;
+            letter-spacing: -0.5px;
+        }
+
+        .library-header p {
+            color: var(--text-muted);
+            margin: 0 0 2rem 0;
+        }
+
+        .filters {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-input {
+            background: var(--surface);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 14px 20px;
+            border-radius: 12px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 1rem;
+            min-width: 250px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .filter-input:focus {
+            border-color: var(--primary);
+        }
+
+        /* Surah Grid */
+        .surah-grid {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        /* Individual Surah Card */
+        .surah-card {
+            background: var(--surface);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+        }
+
+        .surah-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 20px rgba(0, 0, 0, 0.06);
+        }
+
+        .surah-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .surah-number {
+            background: var(--bg-color);
+            color: var(--secondary);
+            font-weight: 700;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 10px;
+            font-size: 0.9rem;
+        }
+
+        .surah-names h3 {
+            margin: 0;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .surah-names p {
+            margin: 0;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .play-icon {
+            color: var(--primary);
+            font-size: 1.8rem;
+            opacity: 0.5;
+            transition: opacity 0.2s;
+        }
+
+        .surah-card:hover .play-icon {
+            opacity: 1;
+        }
+
+        /* Mobile Adjustments */
+        @media (max-width: 600px) {
+            body { padding: 1rem; }
+            .nav-bar { margin-bottom: 1rem; }
+            .library-header h1 { font-size: 2rem; }
+            .filters { flex-direction: column; }
+            .filter-input { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navigation -->
+    <div class="nav-bar">
+        <a href="index.html" class="back-btn">
+            <i class="ph ph-arrow-left"></i> Back to Player
+        </a>
+    </div>
+
+    <!-- Header & Search -->
+    <div class="library-header">
+        <h1>Quran Audio Library</h1>
+        <p>Select a reciter and Surah to instantly load it into Ayah Looper.</p>
+        
+        <div class="filters">
+        <select id="reciterSelect" class="reciter-dropdown">
+        <option value="mishaari_raashid_al_3afaasee">Mishary Rashid Alafasy</option>
+        <option value="muhammad_siddeeq_al-minshaawee">Mohamed Siddiq al-Minshawi</option>
+        <option value="mahmood_khaleel_al-husaree">Mahmoud Khalil Al-Husary</option>
+    </select>
+            
+            <input type="text" class="filter-input" id="searchInput" placeholder="Search for a Surah...">
+        </div>
+    </div>
+
+    <!-- Grid of Audio Files -->
+    <div class="surah-grid" id="surahGrid">
+        <!-- Temporary Placeholder Cards (We will generate all 114 with Javascript later) -->
+        
+        <div class="surah-card">
+            <div class="surah-info">
+                <div class="surah-number">1</div>
+                <div class="surah-names">
+                    <h3>Al-Fatihah</h3>
+                    <p>The Opener</p>
+                </div>
+            </div>
+            <i class="ph-fill ph-play-circle play-icon"></i>
+        </div>
+
+        <div class="surah-card">
+            <div class="surah-info">
+                <div class="surah-number">2</div>
+                <div class="surah-names">
+                    <h3>Al-Baqarah</h3>
+                    <p>The Cow</p>
+                </div>
+            </div>
+            <i class="ph-fill ph-play-circle play-icon"></i>
+        </div>
+        
+        <div class="surah-card">
+            <div class="surah-info">
+                <div class="surah-number">67</div>
+                <div class="surah-names">
+                    <h3>Al-Mulk</h3>
+                    <p>The Sovereignty</p>
+                </div>
+            </div>
+            <i class="ph-fill ph-play-circle play-icon"></i>
+        </div>
+
+    </div>
+
+   <script>
+        const surahGrid = document.getElementById('surahGrid');
+        const searchInput = document.getElementById('searchInput');
+        const reciterSelect = document.getElementById('reciterSelect');
+
+        // Fetch all 114 Surahs from the free Alquran API
+        async function loadSurahs() {
+            try {
+                // Call the free database
+                const response = await fetch('https://api.alquran.cloud/v1/surah');
+                const data = await response.json();
+                const surahs = data.data;
+
+                // Clear out our 3 dummy cards
+                surahGrid.innerHTML = '';
+
+                // Loop through all 114 Surahs and build a card for each one
+                surahs.forEach(surah => {
+                    const card = document.createElement('div');
+                    card.className = 'surah-card';
+                    card.innerHTML = `
+                        <div class="surah-info">
+                            <div class="surah-number">${surah.number}</div>
+                            <div class="surah-names">
+                                <h3>${surah.englishName}</h3>
+                                <p>${surah.englishNameTranslation}</p>
+                            </div>
+                        </div>
+                        <i class="ph-fill ph-play-circle play-icon"></i>
+                    `;
+
+                    // When the user clicks this Surah card
+                    card.addEventListener('click', () => {
+                        const reciterValue = reciterSelect.value;
+                        // Grab the actual readable name (e.g., "Mishary Rashid Alafasy")
+                        const reciterName = reciterSelect.options[reciterSelect.selectedIndex].text;
+                        
+                        // Enterprise servers require exactly 3 digits
+                        const paddedNumber = String(surah.number).padStart(3, '0');
+                        
+                        // Use the bulletproof Quran.com Audio CDN
+                        const audioUrl = `https://download.quranicaudio.com/quran/${reciterValue}/${paddedNumber}.mp3`;
+                        
+                        // Send the user back to the main app with the Audio, Title, AND Reciter Name!
+                        window.location.href = `index.html?audio=${encodeURIComponent(audioUrl)}&title=${encodeURIComponent(surah.englishName)}&reciter=${encodeURIComponent(reciterName)}`;
+                    });
+
+                    surahGrid.appendChild(card);
+                });
+
+                // Make the Search Bar work instantly
+                searchInput.addEventListener('input', (e) => {
+                    const term = e.target.value.toLowerCase();
+                    const cards = document.querySelectorAll('.surah-card');
+                    
+                    cards.forEach((c, index) => {
+                        const name = surahs[index].englishName.toLowerCase();
+                        const translation = surahs[index].englishNameTranslation.toLowerCase();
+                        
+                        if (name.includes(term) || translation.includes(term)) {
+                            c.style.display = 'flex';
+                        } else {
+                            c.style.display = 'none';
+                        }
+                    });
+                });
+
+            } catch (error) {
+                console.error("Error loading Surahs:", error);
+                surahGrid.innerHTML = '<p style="grid-column: 1/-1; text-align:center;">Error loading library. Please check your internet connection.</p>';
+            }
+        }
+
+        // Run the fetch function as soon as the page loads
+        loadSurahs();
+        
+        // Inherit Dark Mode from the main app automatically
+        if (localStorage.getItem('theme') === 'dark') {
+            document.body.classList.add('dark-mode');
+        }
+    </script>
