@@ -380,6 +380,11 @@
                     <i class="ph-fill ph-books" style="font-size: 1.5rem;"></i> Browse Free Audio Library
                 </a>
                 
+                <!-- NEW: Back Button (Hidden by default) -->
+                <a id="backToLibraryBtn" href="library.html" style="display: none; align-items: center; gap: 8px; color: var(--text-main); font-weight: 600; text-decoration: none; margin-bottom: 1rem; padding: 0.5rem 1rem; background: var(--surface); border: 1px solid var(--border-color); border-radius: 12px; width: fit-content;">
+                    <i class="ph ph-arrow-left"></i> Back to Library
+                </a>
+
                 <!-- NEW: Beautiful Audio Display (Hidden by default) -->
                 <div id="audioDisplay" style="display: none; background: linear-gradient(135deg, var(--primary, #2b6cb0), #2a4365); color: white; padding: 3.5rem 1rem; border-radius: 16px; text-align: center; margin-bottom: 1rem; box-shadow: 0 8px 16px rgba(0,0,0,0.15);">
                     <h2 id="displayTitle" style="font-size: 2.2rem; margin: 0 0 0.5rem 0; font-weight: 700;">Surah</h2>
@@ -493,7 +498,10 @@
                 // Hide the upload box
                 document.querySelector('.file-upload-wrapper').style.display = 'none';
                 
-               // 1. Show the beautiful display and inject the names
+                // Show the Back button
+                document.getElementById('backToLibraryBtn').style.display = 'flex';
+                
+                // 1. Show the beautiful display and inject the names
                 audioDisplay.style.display = 'block';
                 document.getElementById('displayTitle').innerText = passedTitle;
                 
@@ -501,12 +509,12 @@
                     document.getElementById('displayReciter').innerText = `by Al-Qari ${passedReciter}`;
                 }
 
-                // 2. FORCE the video screen down to just an audio control bar
-                player.style.setProperty('height', '54px', 'important');
-                player.style.setProperty('min-height', '54px', 'important');
-                player.style.setProperty('max-height', '54px', 'important');
+                // 2. FORCE the video screen down to just an audio control bar (Increased to 75px for mobile!)
+                player.style.setProperty('height', '75px', 'important');
+                player.style.setProperty('min-height', '75px', 'important');
+                player.style.setProperty('max-height', '75px', 'important');
                 player.style.setProperty('background', 'transparent', 'important');
-                player.style.setProperty('border-radius', '30px', 'important'); // Rounds the edges!
+                player.style.setProperty('border-radius', '30px', 'important');
                 
                 // CATCH ERRORS
                 player.addEventListener('error', () => {
@@ -522,11 +530,31 @@
         });
     </script> <!-- THIS IS THE FIX: Close the script here! -->
 
-    <!-- SEO Footer for Google Rankings (Floating Bottom Right Widget) -->
-    <footer style="position: fixed; bottom: 20px; right: 20px; max-width: 320px; text-align: right; background: var(--surface); padding: 1.5rem; border-radius: 16px; border: 1px solid var(--border-color); box-shadow: 0 8px 24px rgba(0,0,0,0.08); z-index: 100;">
+   <!-- SEO Footer for Google Rankings (Floating Bottom Right Widget) -->
+    <footer id="seoWidget" style="position: fixed; bottom: 20px; right: 20px; max-width: 320px; text-align: right; background: var(--surface); padding: 1.5rem; border-radius: 16px; border: 1px solid var(--border-color); box-shadow: 0 8px 24px rgba(0,0,0,0.08); z-index: 100;">
+        <!-- The X Close Button -->
+        <button id="closeSeoBtn" style="position: absolute; top: 12px; left: 15px; background: transparent; border: none; font-size: 1.5rem; color: var(--text-muted); cursor: pointer; padding: 0; line-height: 1;">&times;</button>
+        
         <h3 style="font-size: 1rem; color: var(--primary); margin: 0 0 0.5rem 0; font-weight: 600;">About Ayah Looper</h3>
         <p style="color: var(--text-muted); font-size: 0.8rem; line-height: 1.5; margin: 0;">A free tool to cut, loop, and repeat specific Ayahs to assist with Hifz (memorization). Stream high-quality Qari audio instantly.</p>
     </footer>
+
+    <!-- Memory Script for SEO Widget -->
+    <script>
+        const seoWidget = document.getElementById('seoWidget');
+        const closeSeoBtn = document.getElementById('closeSeoBtn');
+
+        // 1. When the page loads, check if they already closed it in the past
+        if (localStorage.getItem('seoDismissed') === 'true') {
+            seoWidget.style.display = 'none'; // Hide it instantly
+        }
+
+        // 2. When they click the X, hide it AND save that choice to memory
+        closeSeoBtn.addEventListener('click', () => {
+            seoWidget.style.display = 'none';
+            localStorage.setItem('seoDismissed', 'true');
+        });
+    </script>
 
     <script src="app.js?v=11"></script>
 </body>
