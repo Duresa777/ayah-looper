@@ -269,18 +269,13 @@ function updateUI() {
     nextBtn.disabled = currentSliceIndex >= totalSlices - 1;
 }
 
-// --- NEW: Keyboard Shortcuts ---
+// --- Keyboard Shortcuts ---
 document.addEventListener('keydown', (event) => {
-    // Prevent shortcuts from firing if the user is typing in the delay input box
     if (event.target.tagName === 'INPUT') return;
-
-    // Check if media is loaded
     if (!video.src || video.src === window.location.href) return;
 
-    // Spacebar: Play or Pause
     if (event.code === 'Space') {
-        event.preventDefault(); // Stop page from scrolling down
-        
+        event.preventDefault(); 
         if (video.paused) {
             video.play();
         } else {
@@ -288,8 +283,120 @@ document.addEventListener('keydown', (event) => {
         }
     }
 
-    // Letter 'C': Trigger Cut
     if (event.key.toLowerCase() === 'c') {
         markCutBtn.click();
+    }
+});
+
+// --- Floating Desktop Mini-Player (Document PiP API) ---
+const pipBtn = document.getElementById('pipBtn');
+
+// 1. Check if the browser supports the modern Document PiP API
+if ('documentPictureInPicture' in window) {
+    pipBtn.style.display = 'flex'; 
+}
+
+pipBtn.addEventListener('click', async () => {
+    if (window.documentPictureInPicture.window) return;
+
+    try {
+        const pipWindow = await window.documentPictureInPicture.requestWindow({
+            width: 320,
+            height: 240
+        });
+
+        // Clone all CSS stylesheets
+        [...document.styleSheets].forEach((styleSheet) => {
+            try {
+                const cssRules = [...styleSheet.cssRules].map((rule) => rule.cssText).join('');
+                const style = document.createElement('style');
+                style.textContent = cssRules;
+                pipWindow.document.head.appendChild(style);
+            } catch (e) {
+                const link = document.createElement('link');
+                link.rel = 'stylesheet';
+                link.type = styleSheet.type;
+                link.media = styleSheet.media;
+                link.href = styleSheet.href;
+                pipWindow.document.head.appendChild(link);
+            }
+        });
+
+        // Inject Phosphor Icons
+        const script = document.createElement('script');
+        script.src = "https://unpkg.com/@phosphor-icons/web";
+        pipWindow.document.head.appendChild(script);
+
+        // Match the current theme
+        pipWindow.document.body.className = document.body.className;
+
+        const titleText = document.getElementById('displayTitle') ? document.getElementById('displayTitle').innerText : 'Ayah Looper';
+
+        // Build the Mini-Player UI
+        pipWindow.document.body.innerHTML = `
+            <div style="height: 100vh; width: 100vw; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--bg-color); color: var(--text-main); font-family: 'Poppins', sans-serif; padding: 20px; margin: 0;">
+                
+                <div style="background: var(--surface); width: 100%; padding: 20px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 1px solid var(--border-color); display: flex; flex-direction: column; align-items: center; gap: 15px;">
+                    
+                    <div style="text-align: center;">
+                        <h3 id="pipTitle" style="margin: 0 0 5px 0; font-size: 1.1rem; color: var(--text-main);">${titleText}</h3>
+                        <p id="pipStatus" style="margin: 0; font-size: 0.75rem; color: var(--text-muted); line-height: 1.3;">${statusText.textContent}</p>
+                    </div>
+                    
+                    <div style="display: flex; gap: 15px; align-items: center; margin-top: 5px;">
+                        <button id="pipPrev" style="background: var(--secondary); border: none; width: 45px; height: 45px; border-radius: 50%; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 0.2s;">
+                            <i class="ph-fill ph-skip-back" style="font-size: 1.2rem;"></i>
+                        </button>
+                        
+                        <button id="pipPlay" style="background: var(--primary); border: none; width: 60px; height: 60px; border-radius: 50%; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(163, 130, 90, 0.3); transition: transform 0.2s;">
+                            <i class="ph-fill ${video.paused ? 'ph-play' : 'ph-pause'}" style="font-size: 1.8rem;"></i>
+                        </button>
+                        
+                        <button id="pipNext" style="background: var(--secondary); border: none; width: 45px; height: 45px; border-radius: 50%; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 0.2s;">
+                            <i class="ph-fill ph-skip-forward" style="font-size: 1.2rem;"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        const pipPlay = pipWindow.document.getElementById('pipPlay');
+        const pipPrev = pipWindow.document.getElementById('pipPrev');
+        const pipNext = pipWindow.document.getElementById('pipNext');
+        const pipStatus = pipWindow.document.getElementById('pipStatus');
+
+        pipPlay.addEventListener('click', () => {
+            if (video.paused) video.play();
+            else video.pause();
+        });
+
+        pipPrev.addEventListener('click', () => { prevBtn.click(); });
+        pipNext.addEventListener('click', () => { nextBtn.click(); });
+
+        [pipPlay, pipPrev, pipNext].forEach(btn => {
+            btn.addEventListener('mousedown', () => btn.style.transform = 'scale(0.9)');
+            btn.addEventListener('mouseup', () => btn.style.transform = 'scale(1)');
+            btn.addEventListener('mouseleave', () => btn.style.transform = 'scale(1)');
+        });
+
+        const updatePipPlayState = () => {
+            pipPlay.innerHTML = `<i class="ph-fill ${video.paused ? 'ph-play' : 'ph-pause'}" style="font-size: 1.8rem;"></i>`;
+        };
+        video.addEventListener('play', updatePipPlayState);
+        video.addEventListener('pause', updatePipPlayState);
+
+        const observer = new MutationObserver(() => {
+            pipStatus.textContent = statusText.textContent;
+        });
+        observer.observe(statusText, { childList: true, characterData: true, subtree: true });
+
+        pipWindow.addEventListener('pagehide', () => {
+            video.removeEventListener('play', updatePipPlayState);
+            video.removeEventListener('pause', updatePipPlayState);
+            observer.disconnect();
+        });
+
+    } catch (err) {
+        console.error('Failed to open PiP window:', err);
     }
 });
