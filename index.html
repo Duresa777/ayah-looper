@@ -9,30 +9,30 @@
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     
     <style>
-        /* Relaxing Light Theme Variables */
+        /* Relaxing Light Coffee Theme Variables */
         :root {
-            --bg-color: #f0f4f2;
-            --surface: #ffffff;
-            --text-main: #2d3748;
-            --text-muted: #718096;
-            --border-color: #e2e8f0;
+            --bg-color: #faf8f5;        /* Steamed milk background */
+            --surface: #ffffff;         /* Pure white surface */
+            --text-main: #4a3727;       /* Rich espresso text */
+            --text-muted: #8a6845;      /* Milky coffee muted text */
+            --border-color: #e5d5c5;    /* Vanilla syrup borders */
             
-            --primary: #5e8b7e;
-            --primary-hover: #4a6f65;
-            --secondary: #7b90a7;
-            --secondary-hover: #627385;
-            --warning: #d98a6c;
-            --warning-hover: #c0795e;
-            --danger: #c96a6a;
+            --primary: #a3825a;         /* Caramel/Medium Roast */
+            --primary-hover: #8a6845;   /* Darker Espresso hover */
+            --secondary: #bfa07d;       /* Light Roast */
+            --secondary-hover: #a3825a; /* Caramel hover */
+            --warning: #d3ba9f;         /* Froth warning */
+            --warning-hover: #bfa07d;   
+            --danger: #c96a6a;          /* Kept a soft red for delete/support */
         }
 
-        /* Dark Theme Variables */
+        /* Dark Coffee Theme Variables */
         body.dark-mode {
-            --bg-color: #121413;
-            --surface: #1e2120;
-            --text-main: #e2e8f0;
-            --text-muted: #a0aec0;
-            --border-color: #2d3748;
+            --bg-color: #271c14;        /* Very dark coffee background */
+            --surface: #36281d;         /* Dark roast surface */
+            --text-main: #f2eae1;       /* Light cream text */
+            --text-muted: #d3ba9f;      /* Caramel muted text */
+            --border-color: #5c432d;    /* Coffee bean borders */
         }
 
         body { 
@@ -46,17 +46,17 @@
             align-items: center;
             padding: 20px;
             box-sizing: border-box;
-            transition: background 0.3s ease, color 0.3s ease;
+            transition: background 0.4s ease, color 0.4s ease;
         }
 
         .player-container {
             background: var(--surface);
             width: 100%;
-            max-width: 650px; /* Default for mobile/tablet */
+            max-width: 650px; 
             padding: 2.5rem;
             border-radius: 24px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(74, 55, 39, 0.08); /* Soft brown shadow */
+            transition: all 0.4s ease;
             position: relative;
         }
 
@@ -131,7 +131,7 @@
             cursor: pointer; transition: all 0.3s ease;
         }
         .file-upload-label i { font-size: 1.5rem; }
-        .file-upload-label:hover { border-color: var(--primary); color: var(--primary); }
+        .file-upload-label:hover { border-color: var(--primary); color: var(--primary); background: var(--surface); }
 
         input[type="file"] {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;
@@ -151,7 +151,7 @@
             background: var(--bg-color); padding: 12px 16px; border-radius: 12px; 
             border: 1px solid var(--border-color); margin-bottom: 1rem;
         }
-        .settings-tools span { font-weight: 500; font-size: 0.95rem; display: flex; align-items: center; gap: 8px; }
+        .settings-tools span { font-weight: 500; font-size: 0.95rem; display: flex; align-items: center; gap: 8px; color: var(--text-main); }
         .delay-input-wrapper { display: flex; align-items: center; gap: 8px; }
         .delay-input-wrapper input {
             width: 60px; padding: 6px; border-radius: 8px; border: 1px solid var(--border-color);
@@ -170,7 +170,7 @@
         #markCutBtn { background: var(--primary); }
         #markCutBtn:hover:not(:disabled) { background: var(--primary-hover); }
 
-        #toggleLoopBtn { background: var(--warning); }
+        #toggleLoopBtn { background: var(--warning); color: #4a3727; } /* Made text brown for contrast */
         #toggleLoopBtn:hover:not(:disabled) { background: var(--warning-hover); }
 
         #prevBtn, #nextBtn { background: var(--secondary); }
@@ -193,13 +193,14 @@
         }
         li button {
             background: var(--danger) !important; border-radius: 8px !important; font-size: 0.85rem !important;
-            padding: 8px 12px !important; min-width: auto; flex: none;
+            padding: 8px 12px !important; min-width: auto; flex: none; color: white;
         }
 
         /* --- Support Modal Styles --- */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(4px);
+            background: rgba(39, 28, 20, 0.4); /* Coffee tinted overlay */
+            backdrop-filter: blur(4px);
             display: none; justify-content: center; align-items: center;
             z-index: 1000; opacity: 0; transition: opacity 0.3s ease;
         }
@@ -243,7 +244,7 @@
         @media (min-width: 1024px) {
             .player-container {
                 max-width: 1200px;
-                height: 90vh; /* Locks the height so the page doesn't scroll */
+                height: 90vh; 
                 display: flex;
                 flex-direction: column;
             }
@@ -251,7 +252,7 @@
                 flex-direction: row; 
                 gap: 2.5rem;
                 flex: 1; 
-                min-height: 0; /* Prevents overflow */
+                min-height: 0; 
             }
             .left-panel {
                 flex: 1.2; 
@@ -269,7 +270,7 @@
                 flex: 1;
                 margin: 0; 
                 min-height: 0;
-                object-fit: contain; /* Shrinks video perfectly into the box */
+                object-fit: contain; 
             }
             ul {
                 overflow-y: auto; 
@@ -284,25 +285,21 @@
 
         /* --- MEDIA QUERY: YouTube-Style Ultra-Compact Mobile App Layout --- */
         @media (max-width: 480px) {
-            /* 1. Tighten the main container and header */
             .top-actions { top: 0.5rem; right: 0.5rem; }
             h2 { margin-top: 1.5rem; font-size: 1.1rem; margin-bottom: 0.5rem; }
             .player-container { padding: 0.75rem; border-radius: 12px; }
             
-            /* 2. Compact the Upload Box and Video */
             .file-upload-label { padding: 0.5rem; font-size: 0.8rem; border-radius: 10px; margin-bottom: 0.5rem; }
             .file-upload-label i { font-size: 1.2rem; }
             video { margin-bottom: 0.5rem; border-radius: 10px; }
 
-            /* 3. The Grid Magic: Dissolve original rows to create one master grid */
             .right-panel {
                 display: grid;
                 grid-template-columns: repeat(4, 1fr);
-                gap: 6px; /* Tighter spacing between buttons */
+                gap: 6px; 
             }
             .slicer-tools, .controls, .file-tools { display: contents; }
 
-            /* 4. Transform main buttons into ultra-tiny Action Bar style */
             button {
                 flex-direction: column !important;
                 padding: 6px 2px !important;
@@ -313,21 +310,19 @@
             }
             button i { font-size: 1.1rem !important; margin: 0 !important; }
 
-            /* 5. Force the exact layout order for the Grid */
             #markCutBtn { order: 1; }
             #toggleLoopBtn { order: 2; }
             #prevBtn { order: 3; }
             #nextBtn { order: 4; }
 
-            /* 6. Settings Bar (Hold Button) - Squished vertically and horizontally */
             .settings-tools { 
                 order: 5; 
                 grid-column: span 4; 
                 margin-bottom: 0;
-                padding: 4px 8px; /* Extremely thin padding */
-                font-size: 0.75rem; /* Smaller text */
+                padding: 4px 8px; 
+                font-size: 0.75rem; 
                 border-radius: 8px;
-                min-height: 2px; /* Forces the box to be short */
+                min-height: 2px; 
             }
             .settings-tools span { font-size: 0.75rem; }
             .delay-input-wrapper input { 
@@ -337,16 +332,13 @@
                 font-size: 0.75rem !important;
             }
             
-            /* 7. Export/Import (Two per row at the bottom) */
             #exportBtn { order: 6; grid-column: span 2; }
             #importBtn { order: 7; grid-column: span 2; }
 
-            /* 8. Status and List */
             .status { order: 8; grid-column: span 4; margin: 0; padding: 0.5rem; font-size: 0.75rem; }
             ul { order: 9; grid-column: span 4; margin-top: 0; gap: 6px; }
             li { padding: 6px 10px !important; font-size: 0.75rem !important; border-radius: 8px; }
             
-            /* Prevent Delete buttons from adopting the YouTube icon-on-top style */
             li button { flex-direction: row !important; padding: 4px 8px !important; font-size: 0.7rem !important; }
         }
     </style>
@@ -380,15 +372,14 @@
                     <i class="ph-fill ph-books" style="font-size: 1.5rem;"></i> Browse Free Audio Library
                 </a>
                 
-                <!-- NEW: Back Button (Hidden by default) -->
                 <a id="backToLibraryBtn" href="library.html" style="display: none; align-items: center; gap: 8px; color: var(--text-main); font-weight: 600; text-decoration: none; margin-bottom: 1rem; padding: 0.5rem 1rem; background: var(--surface); border: 1px solid var(--border-color); border-radius: 12px; width: fit-content;">
                     <i class="ph ph-arrow-left"></i> Back to Library
                 </a>
 
-                <!-- NEW: Beautiful Audio Display (Hidden by default) -->
-                <div id="audioDisplay" style="display: none; background: linear-gradient(135deg, var(--primary, #2b6cb0), #2a4365); color: white; padding: 3.5rem 1rem; border-radius: 16px; text-align: center; margin-bottom: 1rem; box-shadow: 0 8px 16px rgba(0,0,0,0.15);">
-                    <h2 id="displayTitle" style="font-size: 2.2rem; margin: 0 0 0.5rem 0; font-weight: 700;">Surah</h2>
-                    <p id="displayReciter" style="font-size: 1.1rem; margin: 0; opacity: 0.9;">by Al-Qari</p>
+                <!-- Beautiful Coffee Gradiant Audio Display -->
+                <div id="audioDisplay" style="display: none; background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #fff; padding: 3.5rem 1rem; border-radius: 16px; text-align: center; margin-bottom: 1rem; box-shadow: 0 8px 16px rgba(0,0,0,0.15);">
+                    <h2 id="displayTitle" style="font-size: 2.2rem; margin: 0 0 0.5rem 0; font-weight: 700; color: #fff;">Surah</h2>
+                    <p id="displayReciter" style="font-size: 1.1rem; margin: 0; opacity: 0.9; color: #f2eae1;">by Al-Qari</p>
                 </div>
 
                 <video id="quranVideo" controls playsinline></video>
@@ -406,7 +397,7 @@
                     <span><i class="ph ph-hourglass-high"></i> Pause between loops:</span>
                     <div class="delay-input-wrapper">
                         <input type="number" id="loopDelay" value="0" min="0" step="0.5">
-                        <span>sec</span>
+                        <span style="color: var(--text-main)">sec</span>
                     </div>
                 </div>
 
@@ -452,6 +443,13 @@
         </div>
     </div>
 
+    <!-- SEO Footer for Google Rankings -->
+    <footer id="seoWidget" style="position: fixed; bottom: 20px; right: 20px; max-width: 320px; text-align: right; background: var(--surface); padding: 1.5rem; border-radius: 16px; border: 1px solid var(--border-color); box-shadow: 0 8px 24px rgba(0,0,0,0.08); z-index: 100;">
+        <button id="closeSeoBtn" style="position: absolute; top: 12px; left: 15px; background: transparent; border: none; font-size: 1.5rem; color: var(--text-muted); cursor: pointer; padding: 0; line-height: 1;">&times;</button>
+        <h3 style="font-size: 1rem; color: var(--primary); margin: 0 0 0.5rem 0; font-weight: 600;">About Ayah Looper</h3>
+        <p style="color: var(--text-muted); font-size: 0.8rem; line-height: 1.5; margin: 0;">A free tool to cut, loop, and repeat specific Ayahs to assist with Hifz (memorization). Stream high-quality Qari audio instantly.</p>
+    </footer>
+
     <script>
         // --- Dark Mode Logic ---
         const themeToggle = document.getElementById('themeToggle');
@@ -483,25 +481,22 @@
         supportModal.addEventListener('click', (e) => {
             if (e.target === supportModal) supportModal.classList.remove('show');
         });
-       // --- API Library Connection Logic ---
+
+        // --- API Library Connection Logic ---
         window.addEventListener('DOMContentLoaded', () => {
             const urlParams = new URLSearchParams(window.location.search);
             const passedAudio = urlParams.get('audio');
             const passedTitle = urlParams.get('title');
-            const passedReciter = urlParams.get('reciter'); // Grab the new Reciter name!
+            const passedReciter = urlParams.get('reciter');
 
             if (passedAudio) {
                 const player = document.getElementById('quranVideo');
                 const statusBox = document.getElementById('statusText');
                 const audioDisplay = document.getElementById('audioDisplay');
                 
-                // Hide the upload box
                 document.querySelector('.file-upload-wrapper').style.display = 'none';
-                
-                // Show the Back button
                 document.getElementById('backToLibraryBtn').style.display = 'flex';
                 
-                // 1. Show the beautiful display and inject the names
                 audioDisplay.style.display = 'block';
                 document.getElementById('displayTitle').innerText = passedTitle;
                 
@@ -509,53 +504,35 @@
                     document.getElementById('displayReciter').innerText = `by Al-Qari ${passedReciter}`;
                 }
 
-                // 2. FORCE the video screen down to just an audio control bar (Increased to 75px for mobile!)
                 player.style.setProperty('height', '75px', 'important');
                 player.style.setProperty('min-height', '75px', 'important');
                 player.style.setProperty('max-height', '75px', 'important');
                 player.style.setProperty('background', 'transparent', 'important');
                 player.style.setProperty('border-radius', '30px', 'important');
                 
-                // CATCH ERRORS
                 player.addEventListener('error', () => {
                     statusBox.innerHTML = `❌ <strong>Error loading ${passedTitle}.</strong><br>The server is busy or the file is missing. Try a different reciter.`;
                 });
 
-                // Load the MP3 directly into the player
                 player.src = passedAudio;
 
-                // Tell the user to press play
                 statusBox.innerHTML = `✅ <strong>${passedTitle}</strong> is ready!<br>Tap the Play button on the bar above to begin.`;
             }
         });
-    </script> <!-- THIS IS THE FIX: Close the script here! -->
 
-   <!-- SEO Footer for Google Rankings (Floating Bottom Right Widget) -->
-    <footer id="seoWidget" style="position: fixed; bottom: 20px; right: 20px; max-width: 320px; text-align: right; background: var(--surface); padding: 1.5rem; border-radius: 16px; border: 1px solid var(--border-color); box-shadow: 0 8px 24px rgba(0,0,0,0.08); z-index: 100;">
-        <!-- The X Close Button -->
-        <button id="closeSeoBtn" style="position: absolute; top: 12px; left: 15px; background: transparent; border: none; font-size: 1.5rem; color: var(--text-muted); cursor: pointer; padding: 0; line-height: 1;">&times;</button>
-        
-        <h3 style="font-size: 1rem; color: var(--primary); margin: 0 0 0.5rem 0; font-weight: 600;">About Ayah Looper</h3>
-        <p style="color: var(--text-muted); font-size: 0.8rem; line-height: 1.5; margin: 0;">A free tool to cut, loop, and repeat specific Ayahs to assist with Hifz (memorization). Stream high-quality Qari audio instantly.</p>
-    </footer>
-
-    <!-- Memory Script for SEO Widget -->
-    <script>
+        // --- SEO Widget Logic ---
         const seoWidget = document.getElementById('seoWidget');
         const closeSeoBtn = document.getElementById('closeSeoBtn');
 
-        // 1. When the page loads, check if they already closed it in the past
         if (localStorage.getItem('seoDismissed') === 'true') {
-            seoWidget.style.display = 'none'; // Hide it instantly
+            seoWidget.style.display = 'none';
         }
 
-        // 2. When they click the X, hide it AND save that choice to memory
         closeSeoBtn.addEventListener('click', () => {
             seoWidget.style.display = 'none';
             localStorage.setItem('seoDismissed', 'true');
         });
     </script>
-
     <script src="app.js?v=11"></script>
 </body>
-</html> 
+</html>
