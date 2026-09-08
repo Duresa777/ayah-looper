@@ -60,7 +60,7 @@
             position: relative;
         }
 
-        /* Top Actions (Dark Mode & Donate) */
+        /* Top Actions (Dark Mode, PiP & Donate) */
         .top-actions {
             position: absolute;
             top: 1.5rem;
@@ -170,7 +170,7 @@
         #markCutBtn { background: var(--primary); }
         #markCutBtn:hover:not(:disabled) { background: var(--primary-hover); }
 
-        #toggleLoopBtn { background: var(--warning); color: #4a3727; } /* Made text brown for contrast */
+        #toggleLoopBtn { background: var(--warning); color: #4a3727; } 
         #toggleLoopBtn:hover:not(:disabled) { background: var(--warning-hover); }
 
         #prevBtn, #nextBtn { background: var(--secondary); }
@@ -199,7 +199,7 @@
         /* --- Support Modal Styles --- */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(39, 28, 20, 0.4); /* Coffee tinted overlay */
+            background: rgba(39, 28, 20, 0.4); 
             backdrop-filter: blur(4px);
             display: none; justify-content: center; align-items: center;
             z-index: 1000; opacity: 0; transition: opacity 0.3s ease;
@@ -349,6 +349,10 @@
         <div class="top-actions">
             <button id="supportBtn" class="action-btn donate-btn" aria-label="Support the project">
                 <i class="ph-fill ph-heart"></i> Support
+            </button>
+            <!-- NEW PIP BUTTON -->
+            <button id="pipBtn" class="action-btn icon-only" aria-label="Open Mini Player" style="display: none;" title="Open Mini-Player">
+                <i class="ph ph-browsers"></i>
             </button>
             <button id="themeToggle" class="action-btn icon-only" aria-label="Toggle Dark Mode">
                 <i class="ph ph-moon"></i>
