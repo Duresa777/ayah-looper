@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FAQ - Ayah Looper</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    
+    <!-- Meta tags for SEO & Authorship -->
+    <meta name="author" content="Duresa Haji">
+    <meta name="creator" content="Duresa Haji">
+    <meta name="publisher" content="Ayah Looper">
+    <meta name="description" content="Frequently Asked Questions about Ayah Looper, a free Quran memorization tool created by Duresa Haji.">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
+    <style>
+        /* Shared Relaxing Coffee Theme */
+        :root {
+            --bg-color: #faf8f5;
+            --surface: #ffffff;
+            --text-main: #4a3727;
+            --text-muted: #8a6845;
+            --border-color: #e5d5c5;
+            --primary: #a3825a;
+            --primary-hover: #8a6845;
+            --secondary: #bfa07d;
+        }
+
+        body.dark-mode {
+            --bg-color: #271c14;
+            --surface: #36281d;
+            --text-main: #f2eae1;
+            --text-muted: #d3ba9f;
+            --border-color: #5c432d;
+        }
+
+        body { 
+            font-family: 'Poppins', sans-serif; 
+            background: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            margin: 0;
+            padding: 2rem;
+            box-sizing: border-box;
+            transition: background 0.4s ease, color 0.4s ease;
+        }
+
+        /* Top Navigation */
+        .nav-bar {
+            max-width: 800px;
+            margin: 0 auto 2rem auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .back-btn {
+            background: var(--surface);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            padding: 10px 20px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(74, 55, 39, 0.05);
+        }
+
+        .back-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            transform: translateX(-4px);
+            box-shadow: 0 6px 15px rgba(74, 55, 39, 0.1);
+        }
+
+        .action-btn {
+            background: var(--surface);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            border-radius: 50px;
+            height: 44px;
+            width: 44px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .action-btn:hover { background: var(--border-color); }
+
+        /* Header */
+        .page-header {
+            max-width: 800px;
+            margin: 0 auto 2.5rem auto;
+            text-align: center;
+        }
+
+        .page-header h1 {
+            font-size: 2.5rem;
+            margin: 0 0 0.5rem 0;
+            letter-spacing: -0.5px;
+            color: var(--text-main);
+        }
+
+        .page-header p {
+            color: var(--text-muted);
+            margin: 0;
+            font-weight: 500;
+            font-size: 1.1rem;
+        }
+
+        /* FAQ Accordion Styles */
+        .faq-container {
+            max-width: 800px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        details {
+            background: var(--surface);
+            border: 2px solid var(--border-color);
+            border-radius: 16px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(74, 55, 39, 0.03);
+        }
+
+        details[open] {
+            border-color: var(--primary);
+            box-shadow: 0 8px 20px rgba(74, 55, 39, 0.08);
+        }
+
+        summary {
+            padding: 1.2rem 1.5rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            list-style: none;
+            color: var(--text-main);
+        }
+
+        summary::-webkit-details-marker {
+            display: none; /* Hides default arrow */
+        }
+
+        .summary-icon {
+            color: var(--primary);
+            font-size: 1.2rem;
+            transition: transform 0.3s ease;
+        }
+
+        details[open] .summary-icon {
+            transform: rotate(180deg);
+        }
+
+        .faq-content {
+            padding: 0 1.5rem 1.5rem 1.5rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+            font-size: 0.95rem;
+            border-top: 1px dashed var(--border-color);
+            margin-top: 0.5rem;
+            padding-top: 1rem;
+        }
+
+        .faq-content a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .faq-content a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 600px) {
+            body { padding: 1rem; }
+            .page-header h1 { font-size: 2rem; }
+            summary { padding: 1rem; font-size: 1rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navigation -->
+    <div class="nav-bar">
+        <a href="index.html" class="back-btn">
+            <i class="ph ph-arrow-left"></i> Back
+        </a>
+        <button id="themeToggle" class="action-btn" aria-label="Toggle Dark Mode">
+            <i class="ph ph-moon"></i>
+        </button>
+    </div>
+
+    <!-- Header -->
+    <div class="page-header">
+        <h1>FAQ & Help</h1>
+        <p>Everything you need to know about Ayah Looper.</p>
+    </div>
+
+    <!-- FAQ Section -->
+    <div class="faq-container">
+        
+        <details>
+            <summary>What is Ayah Looper? <i class="ph ph-caret-down summary-icon"></i></summary>
+            <div class="faq-content">
+                Ayah Looper is a free web application designed to help with Hifz (Quran memorization). It allows you to select specific reciters, slice audio tracks into individual Ayahs, and loop them continuously with custom pauses in between.
+            </div>
+        </details>
+
+        <details>
+            <summary>How do I save my audio cuts? <i class="ph ph-caret-down summary-icon"></i></summary>
+            <div class="faq-content">
+                Your cuts are automatically saved to your browser's local memory. The next time you upload the same file or load the same Surah from the library, your cuts will still be there! For a permanent backup, you can click the <strong>Export Cuts</strong> button to download a `.json` file, which you can load later using the Import button.
+            </div>
+        </details>
+
+        <details>
+            <summary>Can I use the app while studying or working? <i class="ph ph-caret-down summary-icon"></i></summary>
+            <div class="faq-content">
+                Yes! If you are on a desktop browser that supports it, click the <strong>Mini-Player</strong> icon (the square icon in the top right of the main app). This will pop out a small, frameless player that stays perfectly on top of all your other windows while you study.
+            </div>
+        </details>
+
+        <details>
+            <summary>What does the "Loop Delay" do? <i class="ph ph-caret-down summary-icon"></i></summary>
+            <div class="faq-content">
+                When memorizing, it's helpful to listen to an Ayah, and then recite it yourself before the audio plays again. By setting the Loop Delay to 3 or 4 seconds, the app will pause silently between each loop, giving you time to repeat the verse out loud.
+            </div>
+        </details>
+
+        <details>
+            <summary>Can I upload my own MP3s? <i class="ph ph-caret-down summary-icon"></i></summary>
+            <div class="faq-content">
+                Absolutely. While we provide a free library of famous reciters, you can upload any audio (`.mp3`) or video (`.mp4`) file from your device into the app, and the slicer/looper tools will work perfectly.
+            </div>
+        </details>
+
+        <details>
+            <summary>Who created Ayah Looper? <i class="ph ph-caret-down summary-icon"></i></summary>
+            <div class="faq-content">
+                This project was created and designed by <strong>Duresa Haji</strong>. If you found it helpful, you can support the development by following the official Instagram account at <a href="https://instagram.com/ayahloopcom" target="_blank">@ayahloopcom</a>.
+            </div>
+        </details>
+
+    </div>
+
+    <!-- Theme Toggle Script -->
+    <script>
+        const themeToggle = document.getElementById('themeToggle');
+        const icon = themeToggle.querySelector('i');
+        
+        if (localStorage.getItem('theme') === 'dark') {
+            document.body.classList.add('dark-mode');
+            icon.classList.replace('ph-moon', 'ph-sun');
+        }
+
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            if (document.body.classList.contains('dark-mode')) {
+                localStorage.setItem('theme', 'dark');
+                icon.classList.replace('ph-moon', 'ph-sun');
+            } else {
+                localStorage.setItem('theme', 'light');
+                icon.classList.replace('ph-sun', 'ph-moon');
+            }
+        });
+    </script>
+</body>
+</html>
