@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ayah Looper</title>
+    <meta name="author" content="Duresa Haji">
+    <meta name="creator" content="Duresa Haji">
+    <meta name="publisher" content="Ayah Looper">
+    <meta name="description" content="A free tool created by Duresa Haji to cut, loop, and repeat specific Ayahs to assist with Quran memorization (Hifz).">
+    <link rel="icon" type="image/png" href="favicon.png">
+    <!-- PWA Setup -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#a3825a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Ayah Looper">
+    <link rel="apple-touch-icon" href="favicon.png">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
+    <style>
+        /* Relaxing Light Coffee Theme Variables */
+        :root {
+            --bg-color: #faf8f5;        /* Steamed milk background */
+            --surface: #ffffff;         /* Pure white surface */
+            --text-main: #4a3727;       /* Rich espresso text */
+            --text-muted: #8a6845;      /* Milky coffee muted text */
+            --border-color: #e5d5c5;    /* Vanilla syrup borders */
+            
+            --primary: #a3825a;         /* Caramel/Medium Roast */
+            --primary-hover: #8a6845;   /* Darker Espresso hover */
+            --secondary: #bfa07d;       /* Light Roast */
+            --secondary-hover: #a3825a; /* Caramel hover */
+            --warning: #d3ba9f;         /* Froth warning */
+            --warning-hover: #bfa07d;   
+            --danger: #c96a6a;          /* Kept a soft red for delete/support */
+        }
+
+        /* Dark Coffee Theme Variables */
+        body.dark-mode {
+            --bg-color: #271c14;        /* Very dark coffee background */
+            --surface: #36281d;         /* Dark roast surface */
+            --text-main: #f2eae1;       /* Light cream text */
+            --text-muted: #d3ba9f;      /* Caramel muted text */
+            --border-color: #5c432d;    /* Coffee bean borders */
+        }
+
+        body { 
+            font-family: 'Poppins', sans-serif; 
+            background: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+            transition: background 0.4s ease, color 0.4s ease;
+        }
+
+        .player-container {
+            background: var(--surface);
+            width: 100%;
+            max-width: 650px; 
+            padding: 2.5rem;
+            border-radius: 24px;
+            box-shadow: 0 10px 30px rgba(74, 55, 39, 0.08); /* Soft brown shadow */
+            transition: all 0.4s ease;
+            position: relative;
+        }
+
+        /* Top Actions (Dark Mode, PiP & Donate) */
+        .top-actions {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            display: flex;
+            gap: 10px;
+            z-index: 10;
+        }
+
+        .action-btn {
+            background: transparent;
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            border-radius: 50px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1rem;
+            font-weight: 500;
+            padding: 0 16px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .action-btn.icon-only {
+            width: 40px;
+            padding: 0;
+            border-radius: 50%;
+        }
+
+        .action-btn:hover { background: var(--bg-color); }
+        
+        .donate-btn i {
+            color: var(--danger);
+            margin-right: 6px;
+            font-size: 1.2rem;
+        }
+
+        h2 {
+            margin: 0 0 1.5rem 0;
+            font-size: 1.75rem;
+            font-weight: 600;
+            text-align: center;
+            letter-spacing: -0.5px;
+        }
+
+        /* --- Split Layout Styles (Mobile Default) --- */
+        .layout-split {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .left-panel, .right-panel {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .file-upload-wrapper { position: relative; margin-bottom: 1rem; }
+
+        .file-upload-label {
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            padding: 1.5rem; background: var(--bg-color); border: 2px dashed var(--border-color);
+            border-radius: 16px; text-align: center; color: var(--text-muted); font-weight: 500;
+            cursor: pointer; transition: all 0.3s ease;
+        }
+        .file-upload-label i { font-size: 1.5rem; }
+        .file-upload-label:hover { border-color: var(--primary); color: var(--primary); background: var(--surface); }
+
+        input[type="file"] {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;
+        }
+
+        video { 
+            width: 100%; background: #000; border-radius: 16px; margin: 0 0 1rem 0; 
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            max-height: 50vh;
+        }
+
+        .slicer-tools, .file-tools, .controls { display: flex; gap: 1rem; margin-bottom: 1rem; }
+
+        /* Settings Box for Delay */
+        .settings-tools {
+            display: flex; justify-content: space-between; align-items: center; 
+            background: var(--bg-color); padding: 12px 16px; border-radius: 12px; 
+            border: 1px solid var(--border-color); margin-bottom: 1rem;
+        }
+        .settings-tools span { font-weight: 500; font-size: 0.95rem; display: flex; align-items: center; gap: 8px; color: var(--text-main); }
+        .delay-input-wrapper { display: flex; align-items: center; gap: 8px; }
+        .delay-input-wrapper input {
+            width: 60px; padding: 6px; border-radius: 8px; border: 1px solid var(--border-color);
+            background: var(--surface); color: var(--text-main); text-align: center; font-weight: 600; font-family: 'Poppins', sans-serif;
+        }
+
+        button { 
+            flex: 1; padding: 12px 20px; font-size: 1rem; font-weight: 500; font-family: inherit;
+            cursor: pointer; border: none; border-radius: 12px; color: white; transition: all 0.2s ease-in-out;
+            display: flex; justify-content: center; align-items: center; gap: 8px;
+        }
+        button i { font-size: 1.2rem; }
+        button:active:not(:disabled) { transform: scale(0.96); }
+        button:disabled { background: var(--border-color) !important; color: var(--text-muted); cursor: not-allowed; }
+
+        #markCutBtn { background: var(--primary); }
+        #markCutBtn:hover:not(:disabled) { background: var(--primary-hover); }
+
+        #toggleLoopBtn { background: var(--warning); color: #4a3727; } 
+        #toggleLoopBtn:hover:not(:disabled) { background: var(--warning-hover); }
+
+        #prevBtn, #nextBtn { background: var(--secondary); }
+        #prevBtn:hover:not(:disabled), #nextBtn:hover:not(:disabled) { background: var(--secondary-hover); }
+
+        #exportBtn, #importBtn { background: var(--bg-color); color: var(--text-main); border: 1px solid var(--border-color); }
+        #exportBtn:hover, #importBtn:hover { background: var(--border-color); }
+
+        .status { 
+            background: var(--bg-color); border: 1px solid var(--border-color); padding: 1rem;
+            border-radius: 12px; font-size: 0.95rem; font-weight: 500; text-align: center; color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+
+        ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+
+        li {
+            background: var(--surface); border: 1px solid var(--border-color); padding: 12px 16px !important;
+            border-radius: 12px; font-weight: 500; display: flex; justify-content: space-between; align-items: center;
+        }
+        li button {
+            background: var(--danger) !important; border-radius: 8px !important; font-size: 0.85rem !important;
+            padding: 8px 12px !important; min-width: auto; flex: none; color: white;
+        }
+
+        /* --- Support Modal Styles --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(39, 28, 20, 0.4); 
+            backdrop-filter: blur(4px);
+            display: none; justify-content: center; align-items: center;
+            z-index: 1000; opacity: 0; transition: opacity 0.3s ease;
+        }
+        .modal-overlay.show { display: flex; opacity: 1; }
+        
+        .modal-content {
+            background: var(--surface); padding: 2rem; border-radius: 24px;
+            width: 90%; max-width: 400px; text-align: center; position: relative;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            transform: translateY(20px); transition: transform 0.3s ease;
+        }
+        .modal-overlay.show .modal-content { transform: translateY(0); }
+        
+        .close-modal {
+            position: absolute; top: 1rem; right: 1rem; background: transparent; border: none; font-size: 1.5rem;
+            color: var(--text-muted); cursor: pointer; padding: 0; min-width: auto; box-shadow: none;
+        }
+        .close-modal:hover { color: var(--text-main); background: transparent; }
+        
+        .modal-content h3 { margin: 0 0 0.5rem 0; font-size: 1.4rem; color: var(--text-main); }
+        .modal-content p { color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1.5rem; }
+
+        /* Tiny CSS for the Fine-Tune Buttons in the Edit Modal */
+        .tune-btn {
+            background: var(--surface);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            border-radius: 8px;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1.2rem;
+            box-shadow: 0 2px 5px rgba(74, 55, 39, 0.05);
+            transition: transform 0.1s, border-color 0.2s;
+        }
+        .tune-btn:active { transform: scale(0.9); }
+        .tune-btn:hover { border-color: var(--primary); }
+        
+        .support-options { display: flex; flex-direction: column; gap: 1rem; }
+        
+        .support-link {
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            padding: 14px; border-radius: 12px; font-weight: 600; text-decoration: none;
+            transition: transform 0.2s ease; color: white;
+        }
+        .support-link:active { transform: scale(0.96); }
+        
+        .ig-link { background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); }
+        .ig-link:hover { filter: brightness(1.1); }
+        
+        .divider { display: flex; align-items: center; text-align: center; margin: 0.5rem 0; }
+        .divider::before, .divider::after { content: ''; flex: 1; border-bottom: 1px solid var(--border-color); }
+        .divider span { padding: 0 10px; color: var(--text-muted); font-size: 0.85rem; font-weight: 600; }
+        .ig-text { margin-bottom: 0.5rem !important; font-size: 0.85rem !important; }
+
+        /* --- MEDIA QUERY: Transform to Side-by-Side Dashboard on Big Displays --- */
+        @media (min-width: 1024px) {
+            .player-container {
+                max-width: 1200px;
+                height: 90vh; 
+                display: flex;
+                flex-direction: column;
+            }
+            .layout-split {
+                flex-direction: row; 
+                gap: 2.5rem;
+                flex: 1; 
+                min-height: 0; 
+            }
+            .left-panel {
+                flex: 1.2; 
+                display: flex;
+                flex-direction: column;
+                min-height: 0;
+            }
+            .right-panel {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                min-height: 0;
+            }
+            video {
+                flex: 1;
+                margin: 0; 
+                min-height: 0;
+                object-fit: contain; 
+            }
+            ul {
+                overflow-y: auto; 
+                padding-right: 10px;
+                flex-grow: 1;
+            }
+            /* Custom Scrollbar */
+            ul::-webkit-scrollbar { width: 6px; }
+            ul::-webkit-scrollbar-track { background: transparent; }
+            ul::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 10px; }
+        }
+
+        /* --- MEDIA QUERY: YouTube-Style Ultra-Compact Mobile App Layout --- */
+        @media (max-width: 480px) {
+            .top-actions { top: 0.5rem; right: 0.5rem; }
+            h2 { margin-top: 1.5rem; font-size: 1.1rem; margin-bottom: 0.5rem; }
+            .player-container { padding: 0.75rem; border-radius: 12px; }
+            
+            .file-upload-label { padding: 0.5rem; font-size: 0.8rem; border-radius: 10px; margin-bottom: 0.5rem; }
+            .file-upload-label i { font-size: 1.2rem; }
+            video { margin-bottom: 0.5rem; border-radius: 10px; }
+
+            .right-panel {
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 6px; 
+            }
+            .slicer-tools, .controls, .file-tools { display: contents; }
+
+            button {
+                flex-direction: column !important;
+                padding: 6px 2px !important;
+                font-size: 0.6rem !important;
+                border-radius: 8px !important;
+                gap: 2px !important;
+                text-align: center;
+            }
+            button i { font-size: 1.1rem !important; margin: 0 !important; }
+
+            #markCutBtn { order: 1; }
+            #toggleLoopBtn { order: 2; }
+            #prevBtn { order: 3; }
+            #nextBtn { order: 4; }
+
+            .settings-tools { 
+                order: 5; 
+                grid-column: span 4; 
+                margin-bottom: 0;
+                padding: 4px 8px; 
+                font-size: 0.75rem; 
+                border-radius: 8px;
+                min-height: 2px; 
+            }
+            .settings-tools span { font-size: 0.75rem; }
+            .delay-input-wrapper input { 
+                padding: 2px !important; 
+                width: 35px !important; 
+                height: 20px;
+                font-size: 0.75rem !important;
+            }
+            
+            #exportBtn { order: 6; grid-column: span 2; }
+            #importBtn { order: 7; grid-column: span 2; }
+
+            .status { order: 8; grid-column: span 4; margin: 0; padding: 0.5rem; font-size: 0.75rem; }
+            ul { order: 9; grid-column: span 4; margin-top: 0; gap: 6px; }
+            li { padding: 6px 10px !important; font-size: 0.75rem !important; border-radius: 8px; }
+            
+            li button { flex-direction: row !important; padding: 4px 8px !important; font-size: 0.7rem !important; }
+        }
+    </style>
+</head>
+<body>
+    <div class="player-container">
+        <!-- Top Actions -->
+        <div class="top-actions">
+            <button id="supportBtn" class="action-btn donate-btn" aria-label="Support the project">
+                <i class="ph-fill ph-heart"></i> Support
+            </button>
+            <!-- NEW PIP BUTTON -->
+            <button id="pipBtn" class="action-btn icon-only" aria-label="Open Mini Player" style="display: none;" title="Open Mini-Player">
+                <i class="ph ph-browsers"></i>
+            </button>
+            <a href="faq.html" class="action-btn icon-only" aria-label="FAQ" title="FAQ">
+                <i class="ph ph-question"></i>
+            </a>
+            <button id="themeToggle" class="action-btn icon-only" aria-label="Toggle Dark Mode">
+                <i class="ph ph-moon"></i>
+            </button>
+            <button id="shortcutsBtn" class="action-btn icon-only" aria-label="Keyboard Shortcuts" title="Shortcuts">
+                <i class="ph ph-keyboard"></i>
+            </button>
+        </div>
+
+        <h2>Ayah Looper</h2>
+        
+        <div class="layout-split">
+            
+            <!-- Left Side: ONLY Video and Upload -->
+            <div class="left-panel">
+                <div class="file-upload-wrapper">
+                    <div class="file-upload-label">
+                        <i class="ph ph-video-camera"></i> Tap to upload a video or audio file
+                    </div>
+                    <input type="file" id="videoUpload" accept="video/mp4,video/*,audio/mp3,audio/*">
+                </div>
+                
+                <a href="library.html" style="display: flex; align-items: center; justify-content: center; gap: 10px; padding: 1rem; background: var(--surface); border: 2px solid var(--primary); border-radius: 16px; text-align: center; color: var(--primary); font-weight: 600; text-decoration: none; margin-bottom: 1rem; transition: all 0.2s;">
+                    <i class="ph-fill ph-books" style="font-size: 1.5rem;"></i> Browse Free Audio Library
+                </a>
+                
+                <a id="backToLibraryBtn" href="library.html" style="display: none; align-items: center; gap: 8px; color: var(--text-main); font-weight: 600; text-decoration: none; margin-bottom: 1rem; padding: 0.5rem 1rem; background: var(--surface); border: 1px solid var(--border-color); border-radius: 12px; width: fit-content;">
+                    <i class="ph ph-arrow-left"></i> Back to Library
+                </a>
+
+                <!-- Beautiful Coffee Gradiant Audio Display -->
+                <div id="audioDisplay" style="display: none; background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #fff; padding: 3.5rem 1rem; border-radius: 16px; text-align: center; margin-bottom: 1rem; box-shadow: 0 8px 16px rgba(0,0,0,0.15);">
+                    <h2 id="displayTitle" style="font-size: 2.2rem; margin: 0 0 0.5rem 0; font-weight: 700; color: #fff;">Surah</h2>
+                    <p id="displayReciter" style="font-size: 1.1rem; margin: 0; opacity: 0.9; color: #f2eae1;">by Al-Qari</p>
+                </div>
+
+    <!-- NEW: Premium Custom Audio Player -->
+    <style>
+        /* Protect the modern player from global button CSS */
+        .modern-player-ui {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            background: var(--surface);
+            padding: 20px 24px;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 1rem;
+            box-shadow: 0 10px 30px rgba(74,55,39,0.06);
+        }
+
+        /* Force a perfect circle */
+        #customPlayBtn {
+            flex: 0 0 auto !important; 
+            width: 56px !important;
+            height: 56px !important;
+            border-radius: 50% !important;
+            background: var(--primary) !important;
+            color: white !important;
+            padding: 0 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            box-shadow: 0 8px 20px rgba(163, 130, 90, 0.35) !important;
+            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+        
+        #customPlayBtn:hover {
+            transform: scale(1.05) !important;
+        }
+
+        .player-controls-wrapper {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .time-displays {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        /* Custom Premium Range Slider */
+        #customSeekBar {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 6px;
+            background: var(--border-color);
+            border-radius: 10px;
+            outline: none;
+            transition: height 0.2s;
+        }
+        
+        #customSeekBar:hover {
+            height: 8px;
+        }
+        
+        #customSeekBar::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+            transition: transform 0.1s;
+        }
+        
+        #customSeekBar::-webkit-slider-thumb:hover {
+            transform: scale(1.3);
+        }
+    </style>
+
+    <!-- We wrap it in this div so JavaScript 'display: block' doesn't break our flex layout -->
+    <div id="customAudioPlayer" style="display: none;">
+        <div class="modern-player-ui">
+            <button id="customPlayBtn">
+                <!-- Slight margin-left makes a play triangle look perfectly centered -->
+                <i class="ph-fill ph-play" id="customPlayIcon" style="font-size: 1.6rem; margin-left: 4px;"></i>
+            </button>
+            <div class="player-controls-wrapper">
+                <div class="time-displays">
+                    <span id="currentTimeDisplay">0:00</span>
+                    <span id="durationDisplay">0:00</span>
+                </div>
+                <input type="range" id="customSeekBar" value="0" min="0" max="100">
+            </div>
+        </div>
+    </div>
+
+                <video id="quranVideo" controls playsinline></video>
+            </div>
+
+            <!-- Right Side: ALL Controls, Status & List -->
+            <div class="right-panel">
+                <div class="slicer-tools">
+                    <button id="markCutBtn"><i class="ph ph-scissors"></i> Cut Ayah Here</button>
+                    <button id="toggleLoopBtn"><i class="ph ph-arrows-clockwise"></i> Start Looping</button>
+                </div>
+
+                <!-- Replace your settings-tools div with this: -->
+                <div class="settings-tools" style="gap: 15px;">
+                    <button id="speedBtn" style="flex: none; padding: 6px 12px; font-size: 0.9rem; background: var(--secondary); border-radius: 8px; margin: 0; width: auto; box-shadow: none;">
+                        <i class="ph-bold ph-gauge"></i> 1x Speed
+                    </button>
+    
+                    <div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex: 1;">
+                        <span><i class="ph ph-hourglass-high"></i> Pause:</span>
+                        <div class="delay-input-wrapper">
+                            <input type="number" id="loopDelay" value="0" min="0" step="0.5">
+                            <span style="color: var(--text-main)">sec</span>
+                        </div>
+                    </div>
+</div>
+
+                <!-- Export & Import Buttons -->
+                <div class="file-tools">
+                    <button id="exportBtn"><i class="ph ph-download-simple"></i> Export Cuts</button>
+                    <input type="file" id="importInput" accept=".json" style="display: none;">
+                    <button id="importBtn"><i class="ph ph-upload-simple"></i> Import Cuts</button>
+                </div>
+
+                <div class="controls">
+                    <button id="prevBtn" disabled><i class="ph ph-caret-left"></i> Previous</button>
+                    <button id="nextBtn" disabled>Next <i class="ph ph-caret-right"></i></button>
+                </div>
+
+                <div class="status" id="statusText">1. Upload a video.<br>2. Play it and click "Cut Ayah Here" to make pieces.</div>
+                
+                <ul id="sliceList"></ul>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Support Modal Popup -->
+    <div id="supportModal" class="modal-overlay">
+        <div class="modal-content">
+            <button class="close-modal" id="closeModalBtn"><i class="ph ph-x"></i></button>
+            <h3>Support the Creator</h3>
+            <p>If Ayah Looper helped you, consider supporting its development!</p>
+            
+            <div class="support-options">
+                <a href="https://ko-fi.com/ayahloop" target="_blank" class="support-link donate-link" style="background: #29abe0; color: white;">
+                    <i class="ph-fill ph-coffee"></i> Support on Ko-fi
+                </a>
+                
+                <div class="divider"><span>OR</span></div>
+                
+                <p class="ig-text">If you can't donate right now, a follow means the world!</p>
+                <a href="https://instagram.com/ayahloopcom" target="_blank" class="support-link ig-link">
+                    <i class="ph ph-instagram-logo"></i> Follow on Instagram
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Shortcuts Modal Popup -->
+    <div id="shortcutsModal" class="modal-overlay">
+        <div class="modal-content">
+            <button class="close-modal" id="closeShortcutsBtn"><i class="ph ph-x"></i></button>
+            <h3>Keyboard Shortcuts</h3>
+            <p>Work faster without touching your mouse!</p>
+            
+            <div style="text-align: left; background: var(--bg-color); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-weight: 600; color: var(--text-main);"><i class="ph-fill ph-play-circle" style="color: var(--primary);"></i> Play / Pause</span>
+                    <kbd style="background: var(--surface); padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border-color); font-family: monospace; font-weight: bold; color: var(--text-main);">Spacebar</kbd>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-weight: 600; color: var(--text-main);"><i class="ph ph-scissors" style="color: var(--primary);"></i> Cut Ayah</span>
+                    <kbd style="background: var(--surface); padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border-color); font-family: monospace; font-weight: bold; color: var(--text-main);">C</kbd>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Beautiful Edit Cut Modal -->
+    <div id="editModal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 360px;">
+            <button class="close-modal" id="closeEditModalBtn"><i class="ph ph-x"></i></button>
+            <h3 id="editModalTitle" style="margin-bottom: 1.5rem;">Edit Ayah</h3>
+            
+            <div style="display: flex; flex-direction: column; gap: 1.5rem; text-align: left;">
+                
+                <!-- Fine Tuning Section -->
+                <div>
+                    <p style="margin: 0 0 10px 0; font-weight: 600; color: var(--text-main); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;">Fine-Tune Timing (+/- 0.5s)</p>
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-color); padding: 16px; border-radius: 16px; border: 1px solid var(--border-color);">
+                        
+                        <div style="display: flex; flex-direction: column; gap: 8px; align-items: center;">
+                            <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: 700; letter-spacing: 1px;">START</span>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <button id="editStartMinus" class="tune-btn">-</button>
+                                <span id="editStartVal" style="font-family: monospace; font-weight: 600; width: 40px; text-align: center; color: var(--primary); font-size: 1.1rem;">0.0</span>
+                                <button id="editStartPlus" class="tune-btn">+</button>
+                            </div>
+                        </div>
+                        
+                        <i class="ph-bold ph-arrow-right" style="color: var(--primary); opacity: 0.3; font-size: 1.5rem;"></i>
+                        
+                        <div style="display: flex; flex-direction: column; gap: 8px; align-items: center;">
+                            <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: 700; letter-spacing: 1px;">END</span>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <button id="editEndMinus" class="tune-btn">-</button>
+                                <span id="editEndVal" style="font-family: monospace; font-weight: 600; width: 40px; text-align: center; color: var(--primary); font-size: 1.1rem;">0.0</span>
+                                <button id="editEndPlus" class="tune-btn">+</button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Merge Section -->
+                <div>
+                    <p style="margin: 0 0 10px 0; font-weight: 600; color: var(--text-main); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;">Merge Cuts</p>
+                    <div style="display: flex; gap: 10px;">
+                        <button id="mergeUpBtn" style="flex: 1; background: var(--secondary); border: none; padding: 12px; border-radius: 12px; color: white; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: background 0.2s;">
+                            <i class="ph-bold ph-arrow-up"></i> Previous
+                        </button>
+                        <button id="mergeDownBtn" style="flex: 1; background: var(--secondary); border: none; padding: 12px; border-radius: 12px; color: white; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: background 0.2s;">
+                            Next <i class="ph-bold ph-arrow-down"></i>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- SEO Footer for Google Rankings -->
+    <footer id="seoWidget" style="position: fixed; bottom: 20px; right: 20px; max-width: 320px; text-align: right; background: var(--surface); padding: 1.5rem; border-radius: 16px; border: 1px solid var(--border-color); box-shadow: 0 8px 24px rgba(0,0,0,0.08); z-index: 100;">
+        <button id="closeSeoBtn" style="position: absolute; top: 12px; left: 15px; background: transparent; border: none; font-size: 1.5rem; color: var(--text-muted); cursor: pointer; padding: 0; line-height: 1;">&times;</button>
+        <h3 style="font-size: 1rem; color: var(--primary); margin: 0 0 0.5rem 0; font-weight: 600;">About Ayah Looper</h3>
+        <p style="color: var(--text-muted); font-size: 0.8rem; line-height: 1.5; margin: 0 0 0.8rem 0;">A free tool to cut, loop, and repeat specific Ayahs to assist with Hifz (memorization). Stream high-quality Qari audio instantly.</p>
+        
+        <!-- Creator Credit Section -->
+        <div style="padding-top: 0.8rem; border-top: 1px solid var(--border-color); text-align: right;">
+            <p style="color: var(--text-main); font-size: 0.75rem; font-weight: 600; margin: 0;">Created by Duresa Haji</p>
+            <a href="https://instagram.com/ayahloopcom" target="_blank" style="color: var(--primary); text-decoration: none; font-size: 0.8rem; display: inline-flex; align-items: center; justify-content: flex-end; gap: 4px; margin-top: 4px; transition: opacity 0.2s;">
+                <i class="ph ph-instagram-logo" style="font-size: 1rem;"></i> @ayahloopcom
+            </a>
+        </div>
+    </footer>
+
+    <script>
+        // --- Dark Mode Logic ---
+        const themeToggle = document.getElementById('themeToggle');
+        const icon = themeToggle.querySelector('i');
+        
+        if (localStorage.getItem('theme') === 'dark') {
+            document.body.classList.add('dark-mode');
+            icon.classList.replace('ph-moon', 'ph-sun');
+        }
+
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            if (document.body.classList.contains('dark-mode')) {
+                localStorage.setItem('theme', 'dark');
+                icon.classList.replace('ph-moon', 'ph-sun');
+            } else {
+                localStorage.setItem('theme', 'light');
+                icon.classList.replace('ph-sun', 'ph-moon');
+            }
+        });
+
+        // --- Support Modal Logic ---
+        const supportBtn = document.getElementById('supportBtn');
+        const supportModal = document.getElementById('supportModal');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+
+        supportBtn.addEventListener('click', () => { supportModal.classList.add('show'); });
+        closeModalBtn.addEventListener('click', () => { supportModal.classList.remove('show'); });
+        supportModal.addEventListener('click', (e) => {
+            if (e.target === supportModal) supportModal.classList.remove('show');
+        });
+
+        // --- Shortcuts Modal Logic ---
+        const shortcutsBtn = document.getElementById('shortcutsBtn');
+        const shortcutsModal = document.getElementById('shortcutsModal');
+        const closeShortcutsBtn = document.getElementById('closeShortcutsBtn');
+
+        if (shortcutsBtn && shortcutsModal && closeShortcutsBtn) {
+            shortcutsBtn.addEventListener('click', () => { shortcutsModal.classList.add('show'); });
+            closeShortcutsBtn.addEventListener('click', () => { shortcutsModal.classList.remove('show'); });
+            shortcutsModal.addEventListener('click', (e) => {
+                if (e.target === shortcutsModal) shortcutsModal.classList.remove('show');
+            });
+        }
+
+        // --- API Library Connection Logic ---
+        window.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const passedAudio = urlParams.get('audio');
+            const passedTitle = urlParams.get('title');
+            const passedReciter = urlParams.get('reciter');
+
+            if (passedAudio) {
+                const player = document.getElementById('quranVideo');
+                const statusBox = document.getElementById('statusText');
+                const audioDisplay = document.getElementById('audioDisplay');
+                const customPlayer = document.getElementById('customAudioPlayer');
+                
+                document.querySelector('.file-upload-wrapper').style.display = 'none';
+                document.getElementById('backToLibraryBtn').style.display = 'flex';
+                
+                // 1. Show the beautiful display
+                audioDisplay.style.display = 'block';
+                document.getElementById('displayTitle').innerText = passedTitle;
+                if (passedReciter) {
+                    document.getElementById('displayReciter').innerText = `by Al-Qari ${passedReciter}`;
+                }
+
+                // 2. Hide the ugly native video player entirely
+                player.style.display = 'none';
+                player.removeAttribute('controls');
+                
+                // 3. Show the sleek custom player
+                customPlayer.style.display = 'block';
+
+                // 4. Connect the custom UI to the hidden audio player
+                const customPlayBtn = document.getElementById('customPlayBtn');
+                const customPlayIcon = document.getElementById('customPlayIcon');
+                const customSeekBar = document.getElementById('customSeekBar');
+                const currentTimeDisplay = document.getElementById('currentTimeDisplay');
+                const durationDisplay = document.getElementById('durationDisplay');
+
+                const formatTime = (seconds) => {
+                    if (isNaN(seconds)) return "0:00";
+                    const m = Math.floor(seconds / 60);
+                    const s = Math.floor(seconds % 60);
+                    return m + ":" + (s < 10 ? "0" : "") + s;
+                };
+
+                customPlayBtn.addEventListener('click', () => {
+                    if (player.paused) player.play();
+                    else player.pause();
+                });
+
+                player.addEventListener('play', () => customPlayIcon.classList.replace('ph-play', 'ph-pause'));
+                player.addEventListener('pause', () => customPlayIcon.classList.replace('ph-pause', 'ph-play'));
+
+                player.addEventListener('loadedmetadata', () => {
+                    customSeekBar.max = player.duration;
+                    durationDisplay.innerText = formatTime(player.duration);
+                });
+
+                player.addEventListener('timeupdate', () => {
+                    customSeekBar.value = player.currentTime;
+                    currentTimeDisplay.innerText = formatTime(player.currentTime);
+                });
+
+                customSeekBar.addEventListener('input', () => {
+                    player.currentTime = customSeekBar.value;
+                });
+
+                player.addEventListener('error', () => {
+                    statusBox.innerHTML = `❌ <strong>Error loading ${passedTitle}.</strong><br>The server is busy or the file is missing. Try a different reciter.`;
+                });
+
+                player.src = passedAudio;
+                statusBox.innerHTML = `✅ <strong>${passedTitle}</strong> is ready!<br>Tap the Play button on the bar above to begin.`;
+            }
+        });
+
+        // --- SEO Widget Logic ---
+        const seoWidget = document.getElementById('seoWidget');
+        const closeSeoBtn = document.getElementById('closeSeoBtn');
+
+        if (localStorage.getItem('seoDismissed') === 'true') {
+            seoWidget.style.display = 'none';
+        }
+
+        closeSeoBtn.addEventListener('click', () => {
+            seoWidget.style.display = 'none';
+            localStorage.setItem('seoDismissed', 'true');
+        });
+    </script>
+    <script src="app.js?v=11"></script>
+</body>
+</html>

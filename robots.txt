@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+
+# Tells crawlers who built this site
+# Creator: Duresa Haji
+# Instagram: @ayahloopcom

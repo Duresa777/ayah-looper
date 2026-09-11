@@ -1,0 +1,21 @@
+{
+  "name": "Ayah Looper",
+  "short_name": "Ayah Looper",
+  "description": "A tool to cut, loop, and repeat specific Ayahs for Hifz.",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#faf8f5",
+  "theme_color": "#a3825a",
+  "icons": [
+    {
+      "src": "favicon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "favicon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
